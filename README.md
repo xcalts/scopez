@@ -22,6 +22,13 @@
   </p>
 </div>
 
+## Features
+
+- Optimized for ease of use and lightweight on resources
+- Parsing a file filled with targets
+- Multiple input support - **STDIN/FILE/HOST/IP/URL**
+- Multiple output support - **JSON/TXT/STDOUT**
+
 ## Developing
 
 In order to start developing you will need to to follow the instructions below.
