@@ -11,8 +11,6 @@
   <p align="center">
     Scopez is a targets analyzer tool written in python with a focus in simplicity.
     <br />
-    Designed to be used in combination with other tools for checking the scope in bug bounties and pentests.
-    <br />
     <a href="https://github.com/xcalts/scopez"><strong>Explore the docs »</strong></a>
     <br />
     <br />
