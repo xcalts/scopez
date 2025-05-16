@@ -120,42 +120,42 @@ class Targeter(pydantic.BaseModel):
         if len(self.ipv4) > 0:
             console.print(rich.panel.Panel.fit("IPV4s"))
             for ipv4 in self.ipv4:
-                console.print(f"{prefix}  - 💻 {ipv4}")
+                console.print(f"{prefix}  - {ipv4}")
 
         if len(self.ipv4_with_port) > 0:
             console.print(rich.panel.Panel.fit("IPV4:PORT"))
             for ipv4_port in self.ipv4_with_port:
-                console.print(f"{prefix}  - 💻 {ipv4_port}")
+                console.print(f"{prefix}  - {ipv4_port}")
 
         if len(self.ipv6) > 0:
             console.print(rich.panel.Panel.fit("IPV6s"))
             for ipv6 in self.ipv6:
-                console.print(f"{prefix}  - 💻 {ipv6}")
+                console.print(f"{prefix}  - {ipv6}")
 
         if len(self.ipv6) > 0:
             console.print(rich.panel.Panel.fit("IPV6s:PORT"))
             for ipv6 in self.ipv6_with_port:
-                console.print(f"{prefix}  - 💻 {ipv6}")
+                console.print(f"{prefix}  - {ipv6}")
 
         if len(self.host) > 0:
             console.print(rich.panel.Panel.fit("Hostnames"))
             for hostname in self.host:
-                console.print(f"{prefix}  - 🔖 {hostname}")
+                console.print(f"{prefix}  - {hostname}")
 
         if len(self.cidr) > 0:
             console.print(rich.panel.Panel.fit("CIDRs"))
             for named_cidr in self.cidr:
-                console.print(f"{prefix}  - 🏭 {named_cidr}")
+                console.print(f"{prefix}  - {named_cidr}")
 
         if len(self.url) > 0:
             console.print(rich.panel.Panel.fit("URLs"))
             for url in self.url:
-                console.print(f"{prefix}  - 🌎 {url}")
+                console.print(f"{prefix}  - {url}")
 
         if len(self.invalid) > 0:
             console.print(rich.panel.Panel.fit("Invalids"))
             for invalid in self.invalid:
-                console.print(f"{prefix}  - 💔 {invalid}")
+                console.print(f"{prefix}  - {invalid}")
 
     def print_urls(self, prefix="") -> None:
         """Prints the parsed URLs in a beautifull format.

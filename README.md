@@ -27,6 +27,33 @@
 - Multiple input support - **STDIN/FILE/HOST/IP/URL**
 - Multiple output support - **JSON/TXT/STDOUT**
 
+## Usage
+
+```
+scopez -help
+
+Usage: scopez [OPTIONS]
+
+INPUT:
+  -target           Targets to analyze (comma-separated).
+  -list             List of targets to analyze (file).
+  -exclude-targets  Targets to exclude from analysis (comma-separated).
+  -exclude-file     List of targets to exclude from analysis (file).
+
+OUTPUT:
+  -output  File to write output to (optional).
+  -json    Write output in JSON lines format.
+  -csv     Write output in csv format.
+
+DEBUG:
+  -no-color  Disable colors in CLI output.
+  -silent    Display only results in output.
+  -version   Show the version and exit.
+
+OTHER:
+  -help  Show this message and exit.
+```
+
 ## Developing
 
 In order to start developing you will need to to follow the instructions below.
