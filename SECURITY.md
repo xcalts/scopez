@@ -1,4 +1,4 @@
-Contact: https://github.com/xcalts/scopez/issues
-Preferred-Languages: en
-Policy: Please report any vulnerabilities by opening an issue in the GitHub repository.
-Acknowledgments: https://github.com/xcalts/scopez#acknowledgments
+- Contact: https://github.com/xcalts/scopez/issues
+- Preferred-Languages: en
+- Policy: Please report any vulnerabilities by opening an issue in the GitHub repository.
+- Acknowledgments: https://github.com/xcalts/scopez#acknowledgments
