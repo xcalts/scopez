@@ -119,6 +119,12 @@ Follow the instructions below to build a standalone `scopez` executable.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
+## Inspirations
+
+- [naabu](https://github.com/projectdiscovery/naabu)
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
 ## Contributing
 
 Any contributions you make are **greatly appreciated**.
