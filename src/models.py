@@ -22,6 +22,7 @@ class IPV4(pydantic.BaseModel):
 
 
 class FQDN(pydantic.BaseModel):
+    type: str = "fqdn"
     fqdn: str = ""
     dns_chain: str = ""
     asn_country_code: str = ""

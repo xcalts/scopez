@@ -1,22 +1,20 @@
+import ipwhois
+import rich.box
+import rich.json
 import rich.progress
 import rich.table
-import rich.json
-import rich.box
-import ipwhois
 
 import ipaddress
 
-import verbose
 import models
+import verbose
 
 
 def analyze(cidrs: list[str], are_v4: bool) -> list[models.CIDR]:
-    c = verbose.console
-
     final: list[models.CIDR] = []
 
-    with rich.progress.Progress(rich.progress.SpinnerColumn(), transient=True) as p:
-        task = p.add_task("", total=len(cidrs))
+    with rich.progress.Progress(rich.progress.SpinnerColumn(), rich.progress.TaskProgressColumn(), transient=True) as p:
+        task = p.add_task("", total=len(cidrs) + 1)
 
         for cidr in cidrs:
             cidr_obj = models.CIDR()
@@ -56,7 +54,7 @@ def print_as_table(cidrs: list[models.CIDR], highlight: bool) -> None:
     c = verbose.console
     t = rich.table.Table(box=rich.box.ASCII)
 
-    t.add_column("models.CIDR")
+    t.add_column("CIDR")
     t.add_column("Possible # of Hosts")
     t.add_column("Visibility")
     t.add_column("ASN Country")
@@ -89,11 +87,22 @@ def print_as_normal(cidrs: list[models.CIDR], highlight: bool) -> None:
     for cidr in cidrs:
         if highlight:
             c.print(
-                f"[green]{cidr.cidr}[/green],[yellow]{cidr.number_of_hosts}[/yellow],[yellow]{cidr.visibility}[/yellow],[red]{cidr.asn_country_code}[/red],[red]{cidr.asn_description}[/red],[red]{cidr.network}[/red]",
+                f"[white]{cidr.type}[/white],[green]{cidr.cidr}[/green],[yellow]{cidr.number_of_hosts}[/yellow],[yellow]{cidr.visibility}[/yellow],[red]{cidr.asn_country_code}[/red],[red]{cidr.asn_description}[/red],[red]{cidr.network}[/red]",
                 highlight=False,
             )
         else:
             c.print(
-                f"{cidr.cidr},{cidr.number_of_hosts},{cidr.visibility},{cidr.asn_country_code},{cidr.asn_description},{cidr.network}",
+                f"{cidr.type},{cidr.cidr},{cidr.number_of_hosts},{cidr.visibility},{cidr.asn_country_code},{cidr.asn_description},{cidr.network}",
                 highlight=highlight,
             )
+
+
+def get_results(cidrs: list[models.CIDR]) -> None:
+    results: list[str] = []
+
+    for cidr in cidrs:
+        results.append(
+            f"{cidr.type},{cidr.cidr},{cidr.number_of_hosts},{cidr.visibility},{cidr.asn_country_code},{cidr.asn_description},{cidr.network}"
+        )
+
+    return results

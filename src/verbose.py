@@ -1,10 +1,11 @@
-import logging.handlers
 import rich.console
-
-import logging
 from rich.logging import RichHandler
 
+import logging
+import logging.handlers
+
 from __version__ import __version__
+
 
 #################
 # Setup logging #

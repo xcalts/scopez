@@ -1,14 +1,16 @@
+import dns.resolver
+import ipwhois
+import rich.box
+import rich.json
 import rich.progress
 import rich.table
-import rich.json
-import rich.box
-import ipwhois
 
-import dns.resolver
 import os
+import subprocess
 
-import verbose
 import models
+import verbose
+
 
 DNS_SERVERS = [
     # Google
@@ -43,12 +45,10 @@ DNS_SERVERS = [
 
 
 def analyze(fqdns: list[str]) -> list[models.FQDN]:
-    c = verbose.console
-
     final: list[models.FQDN] = []
 
     with rich.progress.Progress(rich.progress.SpinnerColumn(), rich.progress.TaskProgressColumn(), transient=True) as p:
-        task = p.add_task("", total=len(fqdns))
+        task = p.add_task("", total=len(fqdns) + 1)
 
         dns_index = 1
 
@@ -122,12 +122,12 @@ def analyze(fqdns: list[str]) -> list[models.FQDN]:
                         # Ping #
                         ########
                         param = "-n" if os.sys.platform.lower() == "win32" else "-c"
-                        response = os.system(f"ping {param} 1 -w2 {ip} > /dev/null 2>&1")
-                        fqdn_obj.pingable = response == 0
+                        command = ["ping", param, "1", "-i 0.2", fqdn]
+                        fqdn_obj.pingable = subprocess.call(command, stdout=subprocess.DEVNULL) == 0
 
                         final.append(fqdn_obj)
-                        p.advance(task, advance=1)
 
+                    p.advance(task, advance=1)
                     continue
 
                 except dns.resolver.NoAnswer:
@@ -172,12 +172,12 @@ def analyze(fqdns: list[str]) -> list[models.FQDN]:
                         # Ping #
                         ########
                         param = "-n" if os.sys.platform.lower() == "win32" else "-c"
-                        response = os.system(f"ping {param} 1 -w2 {ip} > /dev/null 2>&1")
-                        fqdn_obj.pingable = response == 0
+                        command = ["ping", param, "1", "-i 0.2", fqdn]
+                        fqdn_obj.pingable = subprocess.call(command, stdout=subprocess.DEVNULL) == 0
 
                         final.append(fqdn_obj)
-                        p.advance(task, advance=1)
 
+                    p.advance(task, advance=1)
                     continue
 
                 except dns.resolver.NoAnswer:
@@ -195,6 +195,8 @@ def analyze(fqdns: list[str]) -> list[models.FQDN]:
                     final.append(fqdn_obj)
                     p.advance(task, advance=1)
                     continue
+
+        p.stop_task(task)
 
     return final
 
@@ -236,11 +238,22 @@ def print_as_normal(fqdns: list[models.FQDN], highlight: bool) -> None:
     for fqdn in fqdns:
         if highlight:
             c.print(
-                f"[green]{fqdn.fqdn}[/green],[yellow]{fqdn.dns_chain}[/yellow],[red]{fqdn.asn_country_code}[/red],[red]{fqdn.asn_description}[/red],[red]{fqdn.network}[/red],[blue]{"pingable" if fqdn.pingable else "not pingable"}[/blue]",
+                f"[white]{fqdn.type}[/white],[green]{fqdn.fqdn}[/green],[yellow]{fqdn.dns_chain}[/yellow],[red]{fqdn.asn_country_code}[/red],[red]{fqdn.asn_description}[/red],[red]{fqdn.network}[/red],[blue]{"pingable" if fqdn.pingable else "not pingable"}[/blue]",
                 highlight=False,
             )
         else:
             c.print(
-                f"{fqdn.fqdn},{fqdn.dns_chain},{fqdn.asn_country_code},{fqdn.asn_description},{fqdn.network},{"pingable" if fqdn.pingable else "not pingable"}",
+                f"{fqdn.type},{fqdn.fqdn},{fqdn.dns_chain},{fqdn.asn_country_code},{fqdn.asn_description},{fqdn.network},{"pingable" if fqdn.pingable else "not pingable"}",
                 highlight=highlight,
             )
+
+
+def get_results(fqdns: list[models.FQDN]) -> None:
+    results: list[str] = []
+
+    for fqdn in fqdns:
+        results.append(
+            f"{fqdn.type},{fqdn.fqdn},{fqdn.dns_chain},{fqdn.asn_country_code},{fqdn.asn_description},{fqdn.network},{"pingable" if fqdn.pingable else "not pingable"}"
+        )
+
+    return results

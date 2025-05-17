@@ -1,5 +1,12 @@
 <a id="readme-top"></a>
 
+[![Python][python-shield]][python-url]
+[![Contributors][contributors-shield]][contributors-url]
+[![Lint][lint-shield]][lint-url]
+[![Stargazers][stars-shield]][stars-url]
+[![Issues][issues-shield]][issues-url]
+[![MIT License][license-shield]][license-url]
+
 <!-- PROJECT LOGO -->
 <br />
 
@@ -10,13 +17,14 @@
   <p align="center">
     Scopez is a Python-based target analysis tool built with simplicity in mind.
     <br />
-    <a href="https://github.com/xcalts/scopez"><strong>Explore the docs »</strong></a>
-    <br />
     <br />
     <a href="https://github.com/xcalts/scopez/issues/new?labels=bug&template=bug-report---.md">Report Bug</a>
     ·
     <a href="https://github.com/xcalts/scopez/issues/new?labels=enhancement&template=feature-request---.md">Request Feature</a>
   </p>
+
+  <img src=".github/screenshot.png" alt="Logo" width="600" />
+
 </div>
 
 ## Features
@@ -26,8 +34,19 @@
 - Captures **RDAP** data
 - **Pings** IPs and FQDNs
 - Displays **DNS chains**
-- Multiple input support - **STDIN/FILE/CIDR/IP/FQDN/URL**
+- Bash friendly output
+- Multiple input support - **STDIN/FILE/CIDR/IP/FQDN**
 - Multiple output support - **TABLE/JSON/TXT/STDOUT**
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+## TODOs
+
+- Input support - **URL, IP with port, FQDN with port**
+- **Proxies** support for URL probing
+- **Markdown** output
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ## Usage
 
@@ -65,6 +84,7 @@ In order to start developing you will need to to follow the instructions below.
 > pyenv global 3.12.6
 > python3 -m venv .venv
 > source .venv/bin/activate
+> (.venv) pip install ruff pre-commit
 > (.venv) pip install -e .
 > (.venv) scopez --version
 ```
@@ -113,3 +133,19 @@ You can also simply open an issue with the tag "enhancement".
 5. Open a Pull Request.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+<!-- MARKDOWN LINKS & IMAGES -->
+<!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
+
+[contributors-shield]: https://img.shields.io/github/contributors/xcalts/scopez.svg?style=for-the-badge
+[contributors-url]: https://github.com/xcalts/scopez/graphs/contributors
+[lint-shield]: https://img.shields.io/github/actions/workflow/status/xcalts/scopez/ruff.yml?style=for-the-badge&label=ruff
+[lint-url]: https://github.com/xcalts/scopez/actions/workflows/ruff.yml
+[stars-shield]: https://img.shields.io/github/stars/xcalts/scopez.svg?style=for-the-badge
+[stars-url]: https://github.com/xcalts/scopez/stargazers
+[issues-shield]: https://img.shields.io/github/issues/xcalts/scopez.svg?style=for-the-badge
+[issues-url]: https://github.com/xcalts/scopez/issues
+[license-shield]: https://img.shields.io/github/license/xcalts/scopez.svg?style=for-the-badge
+[license-url]: https://github.com/xcalts/scopez/blob/master/LICENSE.txt
+[python-shield]: https://img.shields.io/badge/-python-blue?style=for-the-badge
+[python-url]: https://www.python.org/

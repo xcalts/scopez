@@ -2,14 +2,13 @@ import click
 
 import sys
 
+from __version__ import __version__
 import cidrs
-import ipv4s
 import fqdns
+import ipv4s
 import targets
 import validation
 import verbose
-
-from __version__ import __version__
 
 
 class CustomOption(click.Option):
@@ -22,13 +21,15 @@ class CustomCommand(click.Command):
     """It instructs the `click` library to list commands in the order that we define their functions."""
 
     def list_commands(self, ctx: click.Context) -> list[str]:
-        """List the commands in the order that we define their functions.
+        """
+        List the commands in the order that we define their functions.
 
         Args:
             ctx (click.Context): The click context.
 
         Returns:
             list[str]: The list of commands in the order that we define their functions.
+
         """
         return list(self.commands)
 
@@ -144,14 +145,6 @@ def cli(
     if json and table:
         raise click.UsageError("You can not use '-json' and '-table' options at the same time.")
 
-    ###########
-    # Welcome #
-    ###########
-    if not silent:
-        verbose.print_banner()
-        verbose.warning("Use with caution. You are responsible for your action.")
-        verbose.warning("Developers assume no liability and are not responsible for any misuse or damage.")
-
     #########
     # Input #
     #########
@@ -177,9 +170,21 @@ def cli(
             verbose.information(f"Excluding targets from the file located at '{exclude_file}'.")
         targeter.parse_exclusions_file(exclude_file)
 
+    ###########
+    # Welcome #
+    ###########
+    if not silent:
+        verbose.print_banner()
+
+        if targeter.total_count() == 0:
+            exit(1)
+
+        verbose.warning("Use with caution. You are responsible for your actions.")
+
     ############
     # Analysis #
     ############
+    results = []
     if not silent:
         verbose.information("Analyzing the targets.")
     if len(targeter.ipv4) > 0:
@@ -190,16 +195,16 @@ def cli(
             ipv4s.print_as_table(ipv4s_, not no_color)
         else:
             ipv4s.print_as_normal(ipv4s_, not no_color)
-
+        results = results + ipv4s.get_results(ipv4s_)
     if len(targeter.cidr_ipv4) > 0:
-        ipv4s_ = cidrs.analyze(targeter.cidr_ipv4, are_v4=True)
+        cidr_ipv4_ = cidrs.analyze(targeter.cidr_ipv4, are_v4=True)
         if json:
-            cidrs.print_as_json(ipv4s_, not no_color)
+            cidrs.print_as_json(cidr_ipv4_, not no_color)
         elif table:
-            cidrs.print_as_table(ipv4s_, not no_color)
+            cidrs.print_as_table(cidr_ipv4_, not no_color)
         else:
-            cidrs.print_as_normal(ipv4s_, not no_color)
-
+            cidrs.print_as_normal(cidr_ipv4_, not no_color)
+        results = results + cidrs.get_results(cidr_ipv4_)
     if len(targeter.fqdn) > 0:
         fqdns_ = fqdns.analyze(targeter.fqdn)
         if json:
@@ -208,6 +213,16 @@ def cli(
             fqdns.print_as_table(fqdns_, not no_color)
         else:
             fqdns.print_as_normal(fqdns_, not no_color)
+        results = results + fqdns.get_results(fqdns_)
+
+    ##########
+    # Output #
+    ##########
+    if output != "":
+        with open(output, "w") as f:
+            for r in results:
+                f.write(r)
+                f.write("\n")
 
 
 if __name__ == "__main__":

@@ -1,0 +1,62 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+# --- Project Settings ---
+[project]
+name = "scopez"
+version = "0.0.1"
+description = "Scopez is a Python scope analysis tool built with simplicity in mind. It is intended to help verify the scope during bug bounty programs and penetration testing."
+readme = "README.md"
+requires-python = ">3.12.5"
+license = { file = "LICENSE" }
+authors = [{ name = "Christos Kaltsas", email = "christos@xcalts.co" }]
+maintainers = [{ name = "Christos Kaltsas", email = "christos@xcalts.co" }]
+
+# --- Required Dependencies ---
+dependencies = [
+    # Command-line interface
+    "Click",
+    # REST HTTP Client
+    "requests",
+    # Rich text and beautiful formatting in the terminal.
+    "rich",
+    # Pydantic is the most widely used data validation library for Python.
+    "pydantic",
+    # Retrieve and parse whois data for IPv4 and IPv6 addresses.
+    "ipwhois",
+]
+
+# --- URLs ---
+[project.urls]
+"Homepage" = "https://github.com/xcalts/bugshunter"
+"Source" = "https://github.com/xcalts/bugshunter"
+"Documentation" = "https://github.com/xcalts/bugshunter"
+"Bug Reports" = "https://github.com/xcalts/bugshunter/issues"
+"Changelog" = "https://github.com/xcalts/bugshunter/releases"
+
+# --- Scripts ---
+[project.scripts]
+scopez = "main:cli"
+
+# --- Lint ---
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F"]
+ignore = ["E501"]
+
+[tool.ruff.format]
+quote-style = "single"
+
+[tool.ruff.lint.isort]
+section-order = [
+    "third-party",
+    "standard-library",
+    "first-party",
+    "local-folder",
+]
+force-sort-within-sections = true
+lines-after-imports = 2

@@ -1,13 +1,9 @@
 import cx_Freeze  # type: ignore
 
-import os
-
-from .setup import read_version
-
 
 cx_Freeze.setup(
     name="scopez",
-    version=read_version(),
+    version="0.0.1",
     author="Christos Kaltsas",
     author_email="christos@xcalts.co",
     python_requires=">3.12.5",

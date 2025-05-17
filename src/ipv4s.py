@@ -1,23 +1,22 @@
+import ipwhois
+import rich.box
+import rich.json
 import rich.progress
 import rich.table
-import rich.json
-import rich.box
-import ipwhois
 
-import ipaddress
 import os
+import ipaddress
+import subprocess
 
-import verbose
 import models
+import verbose
 
 
 def analyze(ipv4s: list[str]) -> list[models.IPV4]:
-    c = verbose.console
-
     final: list[models.IPV4] = []
 
-    with rich.progress.Progress(rich.progress.SpinnerColumn(), transient=True) as p:
-        task = p.add_task("", total=len(ipv4s))
+    with rich.progress.Progress(rich.progress.SpinnerColumn(), rich.progress.TaskProgressColumn(), transient=True) as p:
+        task = p.add_task("", total=len(ipv4s) + 1)
 
         for ipv4 in ipv4s:
             ipv4_obj = models.IPV4()
@@ -49,8 +48,8 @@ def analyze(ipv4s: list[str]) -> list[models.IPV4]:
             # Ping #
             ########
             param = "-n" if os.sys.platform.lower() == "win32" else "-c"
-            response = os.system(f"ping {param} 1 -w2 {ipv4} > /dev/null 2>&1")
-            ipv4_obj.pingable = response == 0
+            command = ["ping", param, "1", "-i 0.2", ipv4]
+            ipv4_obj.pingable = subprocess.call(command, stdout=subprocess.DEVNULL) == 0
 
             final.append(ipv4_obj)
 
@@ -96,11 +95,22 @@ def print_as_normal(ipv4s: list[models.IPV4], highlight: bool) -> None:
     for ipv4 in ipv4s:
         if highlight:
             c.print(
-                f"[green]{ipv4.ipv4}[/green],[yellow]{ipv4.visibility}[/yellow],[red]{ipv4.asn_country_code}[/red],[red]{ipv4.asn_description}[/red],[red]{ipv4.network}[/red][blue]{"pingable" if ipv4.pingable else "not pingable"}[/blue]",
+                f"[white]{ipv4.type}[/white],[green]{ipv4.ipv4}[/green],[yellow]{ipv4.visibility}[/yellow],[red]{ipv4.asn_country_code}[/red],[red]{ipv4.asn_description}[/red],[red]{ipv4.network}[/red][blue],{"pingable" if ipv4.pingable else "not pingable"}[/blue]",
                 highlight=False,
             )
         else:
             c.print(
-                f"{ipv4.ipv4},{ipv4.visibility},{ipv4.asn_country_code},{ipv4.asn_description},{ipv4.network},{"pingable" if ipv4.pingable else "not pingable"}",
+                f"{ipv4.type},{ipv4.ipv4},{ipv4.visibility},{ipv4.asn_country_code},{ipv4.asn_description},{ipv4.network},{"pingable" if ipv4.pingable else "not pingable"}",
                 highlight=highlight,
             )
+
+
+def get_results(ipv4s: list[models.IPV4]) -> None:
+    results: list[str] = []
+
+    for ipv4 in ipv4s:
+        results.append(
+            f"{ipv4.type},{ipv4.ipv4},{ipv4.visibility},{ipv4.asn_country_code},{ipv4.asn_description},{ipv4.network},{"pingable" if ipv4.pingable else "not pingable"}"
+        )
+
+    return results

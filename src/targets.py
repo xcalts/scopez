@@ -1,9 +1,9 @@
-import pydantic
 import fqdn
+import pydantic
 
+import ipaddress
 import sys
 import urllib.parse
-import ipaddress
 
 
 class Targeter(pydantic.BaseModel):
@@ -26,8 +26,9 @@ class Targeter(pydantic.BaseModel):
 
         Args:
             targets_filepath (str): Path to file or "-" to read from stdin.
+
         """
-        file = sys.stdin if targets_filepath == "-" else open(targets_filepath, "r")
+        file = sys.stdin if targets_filepath == "-" else open(targets_filepath)
 
         with file as f:
             for line in f:
@@ -60,8 +61,8 @@ class Targeter(pydantic.BaseModel):
 
         Args:
             targets_str (str): The text that contains the targets separted by a newline.
-        """
 
+        """
         for val in targets_str.split(","):
             if self._validate_ipv4(val):
                 self.ipv4.append(val)
@@ -87,9 +88,8 @@ class Targeter(pydantic.BaseModel):
 
     def parse_exclusions_file(self, exclusions_filepath: str) -> None:
         """Parses targets in the exclusions file and removes them from the targets list."""
-
         # Extracting the exclusions and removing them from the target lists
-        with open(exclusions_filepath, "r") as file:
+        with open(exclusions_filepath) as file:
             for val in file:
                 val = val.strip()
                 if self._validate_ipv4(val):
@@ -133,15 +133,26 @@ class Targeter(pydantic.BaseModel):
             else:
                 self._remove_from_list(self.invalid, val)
 
+    def total_count(self) -> int:
+        return (
+            len(self.ipv4)
+            + len(self.ipv4_with_port)
+            + len(self.ipv6)
+            + len(self.ipv6_with_port)
+            + len(self.fqdn)
+            + len(self.fqnd_with_port)
+            + len(self.cidr_ipv4)
+            + len(self.cidr_ipv6)
+            + len(self.url)
+        )
+
     def _remove_from_list(self, target_list: list[str], item: str) -> None:
         """Helper function to remove an item from a list if it exists."""
-
         if item in target_list:
             target_list.remove(item)
 
     def _remove_duplicates(self) -> None:
         """Remove all duplicate entries of the targets lists."""
-
         self.ipv4 = list(set(self.ipv4))
         self.ipv4_with_port = list(set(self.ipv4_with_port))
         self.ipv6 = list(set(self.ipv6))
