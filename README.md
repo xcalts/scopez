@@ -10,7 +10,7 @@
 
 <div align="center">
   <a href="https://github.com/xcalts/scopez">
-    <img src=".github/logo.svg" alt="Logo" height="100" />
+    <img src="https://github.com/xcalts/scopez/raw/main/.github/logo.svg" alt="Logo" height="100" />
   </a>
   <p align="center">
     Scopez is a Python-based target analysis tool built with simplicity in mind.

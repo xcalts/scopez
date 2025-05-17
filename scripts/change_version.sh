@@ -26,5 +26,5 @@ echo "Version updated to $NEW_VERSION in:
 echo "Pushing to Github"
 git checkout main
 git pull origin main
-git tag -a "$NEW_VERSION" -m "v$NEW_VERSION"
+git tag -a "$NEW_VERSION" -m "$NEW_VERSION"
 git push origin "$NEW_VERSION"
