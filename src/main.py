@@ -145,14 +145,6 @@ def cli(
     if json and table:
         raise click.UsageError("You can not use '-json' and '-table' options at the same time.")
 
-    ###########
-    # Welcome #
-    ###########
-    if not silent:
-        verbose.print_banner()
-        verbose.warning("Use with caution. You are responsible for your action.")
-        verbose.warning("Developers assume no liability and are not responsible for any misuse or damage.")
-
     #########
     # Input #
     #########
@@ -177,6 +169,18 @@ def cli(
         if not silent:
             verbose.information(f"Excluding targets from the file located at '{exclude_file}'.")
         targeter.parse_exclusions_file(exclude_file)
+
+    ###########
+    # Welcome #
+    ###########
+    if not silent:
+        verbose.print_banner()
+
+        if targeter.total_count() == 0:
+            exit(1)
+
+        verbose.warning("Use with caution. You are responsible for your action.")
+        verbose.warning("Developers assume no liability and are not responsible for any misuse or damage.")
 
     ############
     # Analysis #

@@ -133,6 +133,19 @@ class Targeter(pydantic.BaseModel):
             else:
                 self._remove_from_list(self.invalid, val)
 
+    def total_count(self) -> int:
+        return (
+            len(self.ipv4)
+            + len(self.ipv4_with_port)
+            + len(self.ipv6)
+            + len(self.ipv6_with_port)
+            + len(self.fqdn)
+            + len(self.fqnd_with_port)
+            + len(self.cidr_ipv4)
+            + len(self.cidr_ipv6)
+            + len(self.url)
+        )
+
     def _remove_from_list(self, target_list: list[str], item: str) -> None:
         """Helper function to remove an item from a list if it exists."""
         if item in target_list:
