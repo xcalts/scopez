@@ -14,7 +14,7 @@ def analyze(cidrs: list[str], are_v4: bool) -> list[models.CIDR]:
     final: list[models.CIDR] = []
 
     with rich.progress.Progress(rich.progress.SpinnerColumn(), transient=True) as p:
-        task = p.add_task("", total=len(cidrs))
+        task = p.add_task("", total=len(cidrs) + 1)
 
         for cidr in cidrs:
             cidr_obj = models.CIDR()

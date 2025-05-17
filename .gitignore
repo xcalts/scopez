@@ -174,5 +174,4 @@ cython_debug/
 .pypirc
 
 # Custom
-.data/
 .DS_Store

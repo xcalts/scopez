@@ -47,7 +47,7 @@ def analyze(fqdns: list[str]) -> list[models.FQDN]:
     final: list[models.FQDN] = []
 
     with rich.progress.Progress(rich.progress.SpinnerColumn(), rich.progress.TaskProgressColumn(), transient=True) as p:
-        task = p.add_task("", total=len(fqdns))
+        task = p.add_task("", total=len(fqdns) + 1)
 
         dns_index = 1
 

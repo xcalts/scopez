@@ -1,0 +1,4 @@
+google.com
+amazon.com
+facebook.com
+netflix.com
