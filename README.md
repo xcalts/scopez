@@ -15,6 +15,9 @@
     ·
     <a href="https://github.com/xcalts/scopez/issues/new?labels=enhancement&template=feature-request---.md">Request Feature</a>
   </p>
+
+  <img src=".github/screenshot.png" alt="Logo" width="600" />
+
 </div>
 
 ## Features
