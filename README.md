@@ -21,7 +21,7 @@
     <a href="https://github.com/xcalts/scopez/issues/new?labels=enhancement&template=feature-request---.md">Request Feature</a>
   </p>
 
-  <img src=".github/screenshot.png" alt="Logo" width="600" />
+  <img src="https://github.com/xcalts/scopez/raw/main/.github/screenshot.png" alt="Logo" width="600" />
 
 </div>
 
@@ -43,6 +43,16 @@
 - Input support - **URL, IP with port, FQDN with port**
 - **Proxies** support for URL probing
 - **Markdown** output
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+## Installation
+
+You can install `scopez` using `pip`.
+
+```
+pip install scopez
+```
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
