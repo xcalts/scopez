@@ -1,0 +1,51 @@
+{'nir': None, 'asn_registry': 'apnic', 'asn': '13335', 'asn_cidr': '103.21.244.0/24', 'asn_country_code': 'US', 'asn_date': '2012-10-23', 'asn_description': 'CLOUDFLARENET, US', 'query': '103.21.244.0', 'network': {'handle': '103.21.244.0 - 103.21.244.255', 
+'status': ['active'
+        ], 'remarks': [
+            {'title': 'description', 'description': 'Cloudflare, inc.\n101 Townsend Street, San Francisco CA 94107', 'links': None
+            }
+        ], 'notices': [
+            {'title': 'Source', 'description': 'Objects returned came from source\nAPNIC', 'links': None
+            },
+            {'title': 'Terms and Conditions', 'description': 'This is the APNIC WHOIS Database query service. The objects are in RDAP format.', 'links': ['http: //www.apnic.net/db/dbcopyright.html']}, {'title': 'Whois Inaccuracy Reporting', 'description': 'If you see 
+inaccuracies in the results, please visit: ', 'links': ['https: //www.apnic.net/manage-ip/using-whois/abuse-and-spamming/invalid-contact-form']}], 'links': ['https://rdap.apnic.net/ip/103.21.244.0/24', 
+'https: //netox.apnic.net/search/103.21.244.0%2F24?utm_source=rdap&utm_medium=result&utm_campaign=rdap_result'], 'events': [{'action': 'registration', 'timestamp': '2016-02-23T23:43:44Z', 'actor': None}, {'action': 'last changed', 'timestamp': '2021-01-13T23:48:11Z',
+'actor': None
+                    }
+                ], 'raw': None, 'start_address': '103.21.244.0', 'end_address': '103.21.244.255', 'cidr': '103.21.244.0/24', 'ip_version': 'v4', 'type': 'ALLOCATED NON-PORTABLE', 'name': 'CLOUDFLARE_103_21_244_0', 'country': 'US', 'parent_handle': None
+            }, 'entities': ['IRT-CLOUDFLAREHK-AP', 'CTC15-AP'
+            ], 'objects': {'IRT-CLOUDFLAREHK-AP': {'handle': 'IRT-CLOUDFLAREHK-AP', 'status': None, 'remarks': [
+                        {'title': 'remarks', 'description': 'rir@cloudflare.com was validated on 2025-01-30\nabuse@cloudflare.com was validated on 
+2025-02-17', 'links': None
+                        }
+                    ], 'notices': None, 'links': ['https: //rdap.apnic.net/entity/IRT-CLOUDFLAREHK-AP'], 'events': [{'action': 'registration', 'timestamp': '2012-10-22T22:57:58Z', 'actor': None}, {'action': 'last changed', 'timestamp': '2025-02-17T06:16:01Z', 
+'actor': None
+                    }
+                ], 'raw': None, 'roles': ['abuse'
+                ], 'contact': {'name': 'IRT-CLOUDFLAREHK-AP', 'kind': 'group', 'address': [
+                        {'type': None, 'value': 'Cloudflare, Inc.\n101 Townsend Street, San Francisco CA 94107'
+                        }
+                    ], 'phone': None, 'email': [
+                        {'type': None, 'value': 
+'rir@cloudflare.com'
+                        },
+                        {'type': None, 'value': 'abuse@cloudflare.com'
+                        }
+                    ], 'role': None, 'title': None
+                }, 'events_actor': None, 'entities': None
+            }, 'CTC15-AP': {'handle': 'CTC15-AP', 'status': None, 'remarks': None, 'notices': None, 'links': ['https: //rdap.apnic.net/entity/CTC15-AP'], 'events': [{'action': 'registration', 'timestamp': '2016-02-23T01:34:25Z', 'actor': None}, {'action': 'last changed', 'timestamp': '2017-09-07T21:56:15Z', 'actor': None}], 'raw': None, 'roles': ['administrative', 
+'technical'
+                ], 'contact': {'name': 'Cloudflare Technical Contact', 'kind': 'group', 'address': [
+                        {'type': None, 'value': '101 Townsend Street, San Francisco CA 94107'
+                        }
+                    ], 'phone': [
+                        {'type': 'voice', 'value': '+1-650-319-8930'
+                        }
+                    ], 'email': [
+                        {'type': None, 'value': 
+'rir@cloudflare.com'
+                        }
+                    ], 'role': None, 'title': None
+                }, 'events_actor': None, 'entities': None
+            }
+        }, 'raw': None
+    }

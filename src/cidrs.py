@@ -3,12 +3,11 @@ import rich.table
 import rich.json
 import rich.box
 import pydantic
+import ipwhois
 
 import ipaddress
-import ipwhois
 import time
 
-import models
 import verbose
 
 
@@ -16,9 +15,9 @@ class CIDR(pydantic.BaseModel):
     cidr: str = ""
     number_of_hosts: int = 0
     visibility: str = ""
-    network: str = ""
     asn_country_code: str = ""
     asn_description: str = ""
+    network: str = ""
 
 
 def analyze(cidrs: list[str]) -> list[CIDR]:
@@ -52,19 +51,18 @@ def analyze(cidrs: list[str]) -> list[CIDR]:
                 ip = cidr.split("/")[0]
                 whois = ipwhois.IPWhois(ip)
                 rdap = whois.lookup_rdap(depth=1)
-            cidr_obj.network = rdap.get("network").get("name") if cidr_is_public else "N/A"
+            cidr_obj.network = rdap.get("network").get("name").replace(",", "") if cidr_is_public else "N/A"
             cidr_obj.asn_country_code = rdap.get("asn_country_code") if cidr_is_public else "N/A"
-            cidr_obj.asn_description = rdap.get("asn_description") if cidr_is_public else "N/A"
+            cidr_obj.asn_description = rdap.get("asn_description").replace(",", "") if cidr_is_public else "N/A"
 
             final.append(cidr_obj)
 
-            time.sleep(1)
             p.advance(task, advance=1)
 
     return final
 
 
-def print_as_table(cidrs: list[models.CIDR], highlight: bool) -> None:
+def print_as_table(cidrs: list[CIDR], highlight: bool) -> None:
     c = verbose.console
     t = rich.table.Table(box=rich.box.ASCII)
 
@@ -88,8 +86,24 @@ def print_as_table(cidrs: list[models.CIDR], highlight: bool) -> None:
     c.print(t, highlight=highlight)
 
 
-def print_as_json(cidrs: list[models.CIDR], highlight: bool) -> None:
+def print_as_json(cidrs: list[CIDR], highlight: bool) -> None:
     c = verbose.console
 
     for cidr in cidrs:
         c.print(rich.json.JSON(cidr.model_dump_json(), indent=None, highlight=highlight))
+
+
+def print_as_normal(cidrs: list[CIDR], highlight: bool) -> None:
+    c = verbose.console
+
+    for cidr in cidrs:
+        if highlight:
+            c.print(
+                f"[green]{cidr.cidr}[/green],[yellow]{cidr.number_of_hosts}[/yellow],[yellow]{cidr.visibility}[/yellow],[red]{cidr.asn_country_code}[/red],[red]{cidr.asn_description}[/red],[red]{cidr.network}[/red]",
+                highlight=False,
+            )
+        else:
+            c.print(
+                f"{cidr.cidr},{cidr.number_of_hosts},{cidr.visibility},{cidr.asn_country_code},{cidr.asn_description},{cidr.network}",
+                highlight=highlight,
+            )

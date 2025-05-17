@@ -7,7 +7,6 @@
   <a href="https://github.com/xcalts/scopez">
     <img src=".github/logo.svg" alt="Logo" height="100" />
   </a>
-  <h3 align="center">scopez</h3>
   <p align="center">
     Scopez is a targets analyzer tool written in python with a focus in simplicity.
     <br />

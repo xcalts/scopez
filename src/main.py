@@ -3,6 +3,7 @@ import click
 import sys
 
 import cidrs
+import ipv4s
 import targets
 import validation
 import verbose
@@ -104,6 +105,13 @@ CONTEXT_SETTINGS = dict(max_content_width=120, help_option_names=["-help"])
     category="OUTPUT",
 )
 @click.option(
+    "-table",
+    help="Write output in Table format.",
+    is_flag=True,
+    cls=CustomOption,
+    category="OUTPUT",
+)
+@click.option(
     "-no-color",
     help="Disable colors in CLI output.",
     is_flag=True,
@@ -124,9 +132,16 @@ def cli(
     exclude_file: str,
     output: str,
     json: bool,
+    table: bool,
     no_color: bool,
     silent: bool,
 ) -> None:
+    ##############
+    # Validation #
+    ##############
+    if json and table:
+        raise click.UsageError("You can not use '-json' and '-table' options at the same time.")
+
     ###########
     # Welcome #
     ###########
@@ -161,18 +176,36 @@ def cli(
         targeter.parse_exclusions_file(exclude_file)
 
     #########
+    # IPV4s #
+    #########
+    if len(targeter.ipv4) > 0:
+        if not silent:
+            verbose.information("Analyzing the IPV4 targets.")
+
+        ipv4s_ = ipv4s.analyze(targeter.ipv4)
+
+        if json:
+            ipv4s.print_as_json(ipv4s_, not no_color)
+        elif table:
+            ipv4s.print_as_table(ipv4s_, not no_color)
+        else:
+            ipv4s.print_as_normal(ipv4s_, not no_color)
+
+    #########
     # CIDRs #
     #########
     if len(targeter.cidr_ipv4) > 0:
         if not silent:
             verbose.information("Analyzing the CIDR targets.")
 
-        cidrs_ = cidrs.analyze(targeter.cidr_ipv4)
+        ipv4s_ = cidrs.analyze(targeter.cidr_ipv4)
 
         if json:
-            cidrs.print_as_json(cidrs_, not no_color)
+            cidrs.print_as_json(ipv4s_, not no_color)
+        elif table:
+            cidrs.print_as_table(ipv4s_, not no_color)
         else:
-            cidrs.print_as_table(cidrs_, not no_color)
+            cidrs.print_as_normal(ipv4s_, not no_color)
 
 
 if __name__ == "__main__":
