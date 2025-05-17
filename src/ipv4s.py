@@ -95,11 +95,22 @@ def print_as_normal(ipv4s: list[models.IPV4], highlight: bool) -> None:
     for ipv4 in ipv4s:
         if highlight:
             c.print(
-                f"[green]{ipv4.ipv4}[/green],[yellow]{ipv4.visibility}[/yellow],[red]{ipv4.asn_country_code}[/red],[red]{ipv4.asn_description}[/red],[red]{ipv4.network}[/red][blue]{"pingable" if ipv4.pingable else "not pingable"}[/blue]",
+                f"[white]{ipv4.type}[/white],[green]{ipv4.ipv4}[/green],[yellow]{ipv4.visibility}[/yellow],[red]{ipv4.asn_country_code}[/red],[red]{ipv4.asn_description}[/red],[red]{ipv4.network}[/red][blue],{"pingable" if ipv4.pingable else "not pingable"}[/blue]",
                 highlight=False,
             )
         else:
             c.print(
-                f"{ipv4.ipv4},{ipv4.visibility},{ipv4.asn_country_code},{ipv4.asn_description},{ipv4.network},{"pingable" if ipv4.pingable else "not pingable"}",
+                f"{ipv4.type},{ipv4.ipv4},{ipv4.visibility},{ipv4.asn_country_code},{ipv4.asn_description},{ipv4.network},{"pingable" if ipv4.pingable else "not pingable"}",
                 highlight=highlight,
             )
+
+
+def get_results(ipv4s: list[models.IPV4]) -> None:
+    results: list[str] = []
+
+    for ipv4 in ipv4s:
+        results.append(
+            f"{ipv4.type},{ipv4.ipv4},{ipv4.visibility},{ipv4.asn_country_code},{ipv4.asn_description},{ipv4.network},{"pingable" if ipv4.pingable else "not pingable"}"
+        )
+
+    return results

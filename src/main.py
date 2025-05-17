@@ -184,6 +184,7 @@ def cli(
     ############
     # Analysis #
     ############
+    results = []
     if not silent:
         verbose.information("Analyzing the targets.")
     if len(targeter.ipv4) > 0:
@@ -194,16 +195,16 @@ def cli(
             ipv4s.print_as_table(ipv4s_, not no_color)
         else:
             ipv4s.print_as_normal(ipv4s_, not no_color)
-
+        results = results + ipv4s.get_results(ipv4s_)
     if len(targeter.cidr_ipv4) > 0:
-        ipv4s_ = cidrs.analyze(targeter.cidr_ipv4, are_v4=True)
+        cidr_ipv4_ = cidrs.analyze(targeter.cidr_ipv4, are_v4=True)
         if json:
-            cidrs.print_as_json(ipv4s_, not no_color)
+            cidrs.print_as_json(cidr_ipv4_, not no_color)
         elif table:
-            cidrs.print_as_table(ipv4s_, not no_color)
+            cidrs.print_as_table(cidr_ipv4_, not no_color)
         else:
-            cidrs.print_as_normal(ipv4s_, not no_color)
-
+            cidrs.print_as_normal(cidr_ipv4_, not no_color)
+        results = results + cidrs.get_results(cidr_ipv4_)
     if len(targeter.fqdn) > 0:
         fqdns_ = fqdns.analyze(targeter.fqdn)
         if json:
@@ -212,6 +213,16 @@ def cli(
             fqdns.print_as_table(fqdns_, not no_color)
         else:
             fqdns.print_as_normal(fqdns_, not no_color)
+        results = results + fqdns.get_results(fqdns_)
+
+    ##########
+    # Output #
+    ##########
+    if output != "":
+        with open(output, "w") as f:
+            for r in results:
+                f.write(r)
+                f.write("\n")
 
 
 if __name__ == "__main__":

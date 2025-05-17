@@ -87,11 +87,22 @@ def print_as_normal(cidrs: list[models.CIDR], highlight: bool) -> None:
     for cidr in cidrs:
         if highlight:
             c.print(
-                f"[green]{cidr.cidr}[/green],[yellow]{cidr.number_of_hosts}[/yellow],[yellow]{cidr.visibility}[/yellow],[red]{cidr.asn_country_code}[/red],[red]{cidr.asn_description}[/red],[red]{cidr.network}[/red]",
+                f"[white]{cidr.type}[/white],[green]{cidr.cidr}[/green],[yellow]{cidr.number_of_hosts}[/yellow],[yellow]{cidr.visibility}[/yellow],[red]{cidr.asn_country_code}[/red],[red]{cidr.asn_description}[/red],[red]{cidr.network}[/red]",
                 highlight=False,
             )
         else:
             c.print(
-                f"{cidr.cidr},{cidr.number_of_hosts},{cidr.visibility},{cidr.asn_country_code},{cidr.asn_description},{cidr.network}",
+                f"{cidr.type},{cidr.cidr},{cidr.number_of_hosts},{cidr.visibility},{cidr.asn_country_code},{cidr.asn_description},{cidr.network}",
                 highlight=highlight,
             )
+
+
+def get_results(cidrs: list[models.CIDR]) -> None:
+    results: list[str] = []
+
+    for cidr in cidrs:
+        results.append(
+            f"{cidr.type},{cidr.cidr},{cidr.number_of_hosts},{cidr.visibility},{cidr.asn_country_code},{cidr.asn_description},{cidr.network}"
+        )
+
+    return results

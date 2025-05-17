@@ -238,11 +238,22 @@ def print_as_normal(fqdns: list[models.FQDN], highlight: bool) -> None:
     for fqdn in fqdns:
         if highlight:
             c.print(
-                f"[green]{fqdn.fqdn}[/green],[yellow]{fqdn.dns_chain}[/yellow],[red]{fqdn.asn_country_code}[/red],[red]{fqdn.asn_description}[/red],[red]{fqdn.network}[/red],[blue]{"pingable" if fqdn.pingable else "not pingable"}[/blue]",
+                f"[white]{fqdn.type}[/white],[green]{fqdn.fqdn}[/green],[yellow]{fqdn.dns_chain}[/yellow],[red]{fqdn.asn_country_code}[/red],[red]{fqdn.asn_description}[/red],[red]{fqdn.network}[/red],[blue]{"pingable" if fqdn.pingable else "not pingable"}[/blue]",
                 highlight=False,
             )
         else:
             c.print(
-                f"{fqdn.fqdn},{fqdn.dns_chain},{fqdn.asn_country_code},{fqdn.asn_description},{fqdn.network},{"pingable" if fqdn.pingable else "not pingable"}",
+                f"{fqdn.type},{fqdn.fqdn},{fqdn.dns_chain},{fqdn.asn_country_code},{fqdn.asn_description},{fqdn.network},{"pingable" if fqdn.pingable else "not pingable"}",
                 highlight=highlight,
             )
+
+
+def get_results(fqdns: list[models.FQDN]) -> None:
+    results: list[str] = []
+
+    for fqdn in fqdns:
+        results.append(
+            f"{fqdn.type},{fqdn.fqdn},{fqdn.dns_chain},{fqdn.asn_country_code},{fqdn.asn_description},{fqdn.network},{"pingable" if fqdn.pingable else "not pingable"}"
+        )
+
+    return results
