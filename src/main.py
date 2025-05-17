@@ -143,7 +143,7 @@ def cli(
     # Validation #
     ##############
     if json and table:
-        raise click.UsageError("You can not use '-json' & '-table' options at the same time.")
+        raise click.UsageError("You can not use '-json' and '-table' options at the same time.")
 
     #########
     # Input #
