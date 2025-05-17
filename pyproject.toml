@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 # --- Project Settings ---
 [project]
 name = "scopez"
-version = "v0.0.1"
+version = "v0.0.2"
 description = "Scopez is a Python scope analysis tool built with simplicity in mind. It is intended to help verify the scope during bug bounty programs and penetration testing."
 readme = "README.md"
 requires-python = ">3.12.5"
