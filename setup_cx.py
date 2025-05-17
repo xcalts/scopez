@@ -15,8 +15,6 @@ cx_Freeze.setup(
     url="https://github.com/xcalts/scopez",
     options={
         "build_exe": {
-            "packages": [],  # Include required packages
-            "excludes": ["tests", "docs"],  # Exclude unnecessary files
             "build_exe": "build/",  # Output directory for the build
         }
     },
