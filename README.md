@@ -19,6 +19,8 @@
     <a href="https://github.com/xcalts/scopez/issues/new?labels=bug&template=bug-report---.md">Report Bug</a>
     ·
     <a href="https://github.com/xcalts/scopez/issues/new?labels=enhancement&template=feature-request---.md">Request Feature</a>
+    ·
+    <a href="https://pypi.org/project/scopez/">PyPI</a>
   </p>
 
   <img src="https://github.com/xcalts/scopez/raw/main/.github/screenshot.png" alt="Logo" width="600" />
