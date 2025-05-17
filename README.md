@@ -10,8 +10,6 @@
   <p align="center">
     Scopez is a Python-based target analysis tool built with simplicity in mind.
     <br />
-    <a href="https://github.com/xcalts/scopez"><strong>Explore the docs »</strong></a>
-    <br />
     <br />
     <a href="https://github.com/xcalts/scopez/issues/new?labels=bug&template=bug-report---.md">Report Bug</a>
     ·
@@ -29,6 +27,8 @@
 - Bash friendly output
 - Multiple input support - **STDIN/FILE/CIDR/IP/FQDN/URL**
 - Multiple output support - **TABLE/JSON/TXT/STDOUT**
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ## Usage
 
