@@ -5,7 +5,7 @@
 
 <div align="center">
   <a href="https://github.com/xcalts/scopez">
-    <img src=".github/logo.png" alt="Logo" height="100" />
+    <img src=".github/logo.svg" alt="Logo" height="100" />
   </a>
   <h3 align="center">scopez</h3>
   <p align="center">
