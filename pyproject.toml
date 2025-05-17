@@ -25,6 +25,8 @@ dependencies = [
     "pydantic",
     # Retrieve and parse whois data for IPv4 and IPv6 addresses.
     "ipwhois",
+    # Validates fully-qualified domain names against RFC 1123, so that they are acceptable to modern bowsers.
+    "fqdn",
 ]
 
 # --- URLs ---
