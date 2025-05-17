@@ -22,3 +22,9 @@ echo "Version updated to $NEW_VERSION in:
 - pyproject.toml
 - setup_cx.py
 - src/__version__.py"
+
+echo "Pushing to Github"
+git checkout main
+git pull origin main
+git tag -a "$NEW_VERSION" -m "v$NEW_VERSION"
+git push origin "$NEW_VERSION"

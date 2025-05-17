@@ -3,9 +3,7 @@
 [![Python][python-shield]][python-url]
 [![Contributors][contributors-shield]][contributors-url]
 [![Lint][lint-shield]][lint-url]
-[![Stargazers][stars-shield]][stars-url]
 [![Issues][issues-shield]][issues-url]
-[![MIT License][license-shield]][license-url]
 
 <!-- PROJECT LOGO -->
 <br />
