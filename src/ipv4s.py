@@ -15,7 +15,7 @@ import verbose
 def analyze(ipv4s: list[str]) -> list[models.IPV4]:
     final: list[models.IPV4] = []
 
-    with rich.progress.Progress(rich.progress.SpinnerColumn(), transient=True) as p:
+    with rich.progress.Progress(rich.progress.SpinnerColumn(), rich.progress.TaskProgressColumn(), transient=True) as p:
         task = p.add_task("", total=len(ipv4s) + 1)
 
         for ipv4 in ipv4s:

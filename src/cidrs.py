@@ -13,7 +13,7 @@ import verbose
 def analyze(cidrs: list[str], are_v4: bool) -> list[models.CIDR]:
     final: list[models.CIDR] = []
 
-    with rich.progress.Progress(rich.progress.SpinnerColumn(), transient=True) as p:
+    with rich.progress.Progress(rich.progress.SpinnerColumn(), rich.progress.TaskProgressColumn(), transient=True) as p:
         task = p.add_task("", total=len(cidrs) + 1)
 
         for cidr in cidrs:
