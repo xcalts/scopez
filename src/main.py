@@ -1,15 +1,22 @@
 import click
-import rich.console
 
 import sys
 
+import cidrs
 import targets
 import validation
+import verbose
 
 from __version__ import __version__
 
 
-class Categories(click.Command):
+class CustomOption(click.Option):
+    def __init__(self, *args, **kwargs):
+        self.category = kwargs.pop("category", None)
+        super().__init__(*args, **kwargs)
+
+
+class CustomCommand(click.Command):
     """It instructs the `click` library to list commands in the order that we define their functions."""
 
     def list_commands(self, ctx: click.Context) -> list[str]:
@@ -34,25 +41,25 @@ class Categories(click.Command):
                 formatter.write_dl([(p.opts[0], p.help or "") for p in params])
 
 
-class CategoryOption(click.Option):
-    def __init__(self, *args, **kwargs):
-        self.category = kwargs.pop("category", None)
-        super().__init__(*args, **kwargs)
-
-
 CONTEXT_SETTINGS = dict(max_content_width=120, help_option_names=["-help"])
 
 
 @click.command(
     context_settings=CONTEXT_SETTINGS,
-    cls=Categories,
+    cls=CustomCommand,
+)
+@click.version_option(
+    __version__,
+    "-version",
+    cls=CustomOption,
+    category="DEBUG",
 )
 @click.option(
     "-target",
     help="Targets to analyze (comma-separated).",
     type=str,
     default="",
-    cls=CategoryOption,
+    cls=CustomOption,
     category="INPUT",
 )
 @click.option(
@@ -61,7 +68,7 @@ CONTEXT_SETTINGS = dict(max_content_width=120, help_option_names=["-help"])
     type=str,
     default="",
     callback=validation.validate_file_exists,
-    cls=CategoryOption,
+    cls=CustomOption,
     category="INPUT",
 )
 @click.option(
@@ -69,7 +76,7 @@ CONTEXT_SETTINGS = dict(max_content_width=120, help_option_names=["-help"])
     help="Targets to exclude from analysis (comma-separated).",
     type=str,
     default="",
-    cls=CategoryOption,
+    cls=CustomOption,
     category="INPUT",
 )
 @click.option(
@@ -78,7 +85,7 @@ CONTEXT_SETTINGS = dict(max_content_width=120, help_option_names=["-help"])
     type=str,
     default="",
     callback=validation.validate_file_exists,
-    cls=CategoryOption,
+    cls=CustomOption,
     category="INPUT",
 )
 @click.option(
@@ -86,50 +93,28 @@ CONTEXT_SETTINGS = dict(max_content_width=120, help_option_names=["-help"])
     help="File to write output to (optional).",
     type=str,
     default="",
-    callback=validation.validate_file_exists,
-    cls=CategoryOption,
+    cls=CustomOption,
     category="OUTPUT",
 )
 @click.option(
     "-json",
     help="Write output in JSON lines format.",
-    type=bool,
-    default=False,
     is_flag=True,
-    cls=CategoryOption,
-    category="OUTPUT",
-)
-@click.option(
-    "-csv",
-    help="Write output in csv format.",
-    type=bool,
-    default=False,
-    is_flag=True,
-    cls=CategoryOption,
+    cls=CustomOption,
     category="OUTPUT",
 )
 @click.option(
     "-no-color",
     help="Disable colors in CLI output.",
-    type=bool,
-    default=False,
     is_flag=True,
-    cls=CategoryOption,
+    cls=CustomOption,
     category="DEBUG",
 )
 @click.option(
     "-silent",
     help="Display only results in output.",
-    type=bool,
-    default=False,
     is_flag=True,
-    cls=CategoryOption,
-    category="DEBUG",
-)
-@click.version_option(
-    __version__,
-    "-version",
-    cls=CategoryOption,
+    cls=CustomOption,
     category="DEBUG",
 )
 def cli(
@@ -139,22 +124,55 @@ def cli(
     exclude_file: str,
     output: str,
     json: bool,
-    csv: bool,
     no_color: bool,
     silent: bool,
 ) -> None:
-    console = rich.console.Console()
-    console._log_render.omit_repeated_times = False
+    ###########
+    # Welcome #
+    ###########
+    if not silent:
+        verbose.print_banner()
+        verbose.warning("Use with caution. You are responsible for your action.")
+        verbose.warning("Developers assume no liability and are not responsible for any misuse or damage.")
 
-    print(exclude_file)
-
+    #########
+    # Input #
+    #########
+    targeter = targets.Targeter()
     if not sys.stdin.isatty():
-        piped_input = sys.stdin.read()
+        if not silent:
+            verbose.information("Parsing targets from the STDIN.")
+        targeter.parse_targets_file("-")
+    elif target != "":
+        if not silent:
+            verbose.information("Parsing targets from the 'target' CLI parameter.")
+        targeter.parse_targets_str(target)
+    elif list != "":
+        if not silent:
+            verbose.information(f"Parsing targets from the file located at '{list}'.")
+        targeter.parse_targets_file(list)
+    elif exclude_targets != "":
+        if not silent:
+            verbose.information("Excluding targets from the 'exclude_targets' CLI parameter.")
+        targeter.parse_exclusions_str(exclude_targets)
+    elif exclude_file != "":
+        if not silent:
+            verbose.information(f"Excluding targets from the file located at '{exclude_file}'.")
+        targeter.parse_exclusions_file(exclude_file)
 
-        console.log("[INF] Parsing the targets from STDIN.")
-        targeter = targets.Targeter()
-        targeter.parse_targets_str(piped_input)
-        targeter.print_targets()
+    #########
+    # CIDRs #
+    #########
+    if len(targeter.cidr_ipv4) > 0:
+        if not silent:
+            verbose.information("Analyzing the CIDR targets.")
+
+        cidrs_ = cidrs.analyze(targeter.cidr_ipv4)
+
+        if json:
+            cidrs.print_as_json(cidrs_, not no_color)
+        else:
+            cidrs.print_as_table(cidrs_, not no_color)
 
 
 if __name__ == "__main__":

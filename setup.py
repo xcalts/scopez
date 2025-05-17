@@ -33,6 +33,10 @@ setuptools.setup(
         "rich",
         # Pydantic is the most widely used data validation library for Python.
         "pydantic",
+        # Retrieve and parse whois data for IPv4 and IPv6 addresses.
+        "ipwhois",
+        # RFC-compliant FQDN validation and manipulation for Python.
+        "fqdn",
     ],
     entry_points={
         "console_scripts": [

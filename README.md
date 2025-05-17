@@ -22,8 +22,8 @@
 
 ## Features
 
-- Optimized for ease of use and lightweight on resources
-- Parsing a file filled with targets
+- Parses a file filled with targets
+- Analyzes IPs and CIDRs, calculates network information and grabs RDAP data
 - Multiple input support - **STDIN/FILE/HOST/IP/URL**
 - Multiple output support - **JSON/TXT/STDOUT**
 
