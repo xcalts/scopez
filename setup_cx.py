@@ -1,7 +1,5 @@
 import cx_Freeze  # type: ignore
 
-import os
-
 
 cx_Freeze.setup(
     name="scopez",

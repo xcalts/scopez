@@ -2,14 +2,13 @@ import click
 
 import sys
 
+from __version__ import __version__
 import cidrs
-import ipv4s
 import fqdns
+import ipv4s
 import targets
 import validation
 import verbose
-
-from __version__ import __version__
 
 
 class CustomOption(click.Option):

@@ -1,18 +1,16 @@
+import ipwhois
+import rich.box
+import rich.json
 import rich.progress
 import rich.table
-import rich.json
-import rich.box
-import ipwhois
 
 import ipaddress
 
-import verbose
 import models
+import verbose
 
 
 def analyze(cidrs: list[str], are_v4: bool) -> list[models.CIDR]:
-    c = verbose.console
-
     final: list[models.CIDR] = []
 
     with rich.progress.Progress(rich.progress.SpinnerColumn(), transient=True) as p:

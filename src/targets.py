@@ -1,9 +1,9 @@
-import pydantic
 import fqdn
+import pydantic
 
+import ipaddress
 import sys
 import urllib.parse
-import ipaddress
 
 
 class Targeter(pydantic.BaseModel):

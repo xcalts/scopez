@@ -65,6 +65,7 @@ In order to start developing you will need to to follow the instructions below.
 > pyenv global 3.12.6
 > python3 -m venv .venv
 > source .venv/bin/activate
+> (.venv) pip install ruff pre-commit
 > (.venv) pip install -e .
 > (.venv) scopez --version
 ```

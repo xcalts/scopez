@@ -1,14 +1,15 @@
+import dns.resolver
+import ipwhois
+import rich.box
+import rich.json
 import rich.progress
 import rich.table
-import rich.json
-import rich.box
-import ipwhois
 
-import dns.resolver
 import os
 
-import verbose
 import models
+import verbose
+
 
 DNS_SERVERS = [
     # Google
@@ -43,8 +44,6 @@ DNS_SERVERS = [
 
 
 def analyze(fqdns: list[str]) -> list[models.FQDN]:
-    c = verbose.console
-
     final: list[models.FQDN] = []
 
     with rich.progress.Progress(rich.progress.SpinnerColumn(), rich.progress.TaskProgressColumn(), transient=True) as p:

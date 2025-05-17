@@ -1,19 +1,17 @@
+import ipwhois
+import rich.box
+import rich.json
 import rich.progress
 import rich.table
-import rich.json
-import rich.box
-import ipwhois
 
 import ipaddress
 import os
 
-import verbose
 import models
+import verbose
 
 
 def analyze(ipv4s: list[str]) -> list[models.IPV4]:
-    c = verbose.console
-
     final: list[models.IPV4] = []
 
     with rich.progress.Progress(rich.progress.SpinnerColumn(), transient=True) as p:
