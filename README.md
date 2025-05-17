@@ -28,8 +28,16 @@
 - **Pings** IPs and FQDNs
 - Displays **DNS chains**
 - Bash friendly output
-- Multiple input support - **STDIN/FILE/CIDR/IP/FQDN/URL**
+- Multiple input support - **STDIN/FILE/CIDR/IP/FQDN**
 - Multiple output support - **TABLE/JSON/TXT/STDOUT**
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+## TODOs
+
+- Input support - **URL, IP with port, FQDN with port**
+- **Proxies** support for URL probing
+- **Markdown** output
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
