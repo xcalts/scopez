@@ -4,8 +4,9 @@ import rich.json
 import rich.progress
 import rich.table
 
-import ipaddress
 import os
+import ipaddress
+import subprocess
 
 import models
 import verbose
@@ -47,8 +48,8 @@ def analyze(ipv4s: list[str]) -> list[models.IPV4]:
             # Ping #
             ########
             param = "-n" if os.sys.platform.lower() == "win32" else "-c"
-            response = os.system(f"ping {param} 1 -w2 {ipv4} > /dev/null 2>&1")
-            ipv4_obj.pingable = response == 0
+            command = ["ping", param, "1", "-i 0.2", ipv4]
+            ipv4_obj.pingable = subprocess.call(command, stdout=subprocess.DEVNULL) == 0
 
             final.append(ipv4_obj)
 

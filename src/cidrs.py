@@ -54,7 +54,7 @@ def print_as_table(cidrs: list[models.CIDR], highlight: bool) -> None:
     c = verbose.console
     t = rich.table.Table(box=rich.box.ASCII)
 
-    t.add_column("models.CIDR")
+    t.add_column("CIDR")
     t.add_column("Possible # of Hosts")
     t.add_column("Visibility")
     t.add_column("ASN Country")

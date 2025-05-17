@@ -6,6 +6,7 @@ import rich.progress
 import rich.table
 
 import os
+import subprocess
 
 import models
 import verbose
@@ -121,12 +122,12 @@ def analyze(fqdns: list[str]) -> list[models.FQDN]:
                         # Ping #
                         ########
                         param = "-n" if os.sys.platform.lower() == "win32" else "-c"
-                        response = os.system(f"ping {param} 1 -w2 {ip} > /dev/null 2>&1")
-                        fqdn_obj.pingable = response == 0
+                        command = ["ping", param, "1", "-i 0.2", fqdn]
+                        fqdn_obj.pingable = subprocess.call(command, stdout=subprocess.DEVNULL) == 0
 
                         final.append(fqdn_obj)
-                        p.advance(task, advance=1)
 
+                    p.advance(task, advance=1)
                     continue
 
                 except dns.resolver.NoAnswer:
@@ -171,12 +172,12 @@ def analyze(fqdns: list[str]) -> list[models.FQDN]:
                         # Ping #
                         ########
                         param = "-n" if os.sys.platform.lower() == "win32" else "-c"
-                        response = os.system(f"ping {param} 1 -w2 {ip} > /dev/null 2>&1")
-                        fqdn_obj.pingable = response == 0
+                        command = ["ping", param, "1", "-i 0.2", fqdn]
+                        fqdn_obj.pingable = subprocess.call(command, stdout=subprocess.DEVNULL) == 0
 
                         final.append(fqdn_obj)
-                        p.advance(task, advance=1)
 
+                    p.advance(task, advance=1)
                     continue
 
                 except dns.resolver.NoAnswer:
@@ -194,6 +195,8 @@ def analyze(fqdns: list[str]) -> list[models.FQDN]:
                     final.append(fqdn_obj)
                     p.advance(task, advance=1)
                     continue
+
+        p.stop_task(task)
 
     return final
 

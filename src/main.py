@@ -179,8 +179,7 @@ def cli(
         if targeter.total_count() == 0:
             exit(1)
 
-        verbose.warning("Use with caution. You are responsible for your action.")
-        verbose.warning("Developers assume no liability and are not responsible for any misuse or damage.")
+        verbose.warning("Use with caution. You are responsible for your actions.")
 
     ############
     # Analysis #

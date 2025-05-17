@@ -26,6 +26,7 @@
 - Captures **RDAP** data
 - **Pings** IPs and FQDNs
 - Displays **DNS chains**
+- Bash friendly output
 - Multiple input support - **STDIN/FILE/CIDR/IP/FQDN/URL**
 - Multiple output support - **TABLE/JSON/TXT/STDOUT**
 

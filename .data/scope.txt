@@ -1,0 +1,9 @@
+google.com
+amazon.com
+facebook.com
+netflix.com
+archlinux.org
+in.gr
+4.2.2.2
+103.21.244.0/22
+2803:f800::/32
