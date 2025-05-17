@@ -4,6 +4,7 @@ import sys
 
 import cidrs
 import ipv4s
+import fqdns
 import targets
 import validation
 import verbose
@@ -136,6 +137,7 @@ def cli(
     no_color: bool,
     silent: bool,
 ) -> None:
+
     ##############
     # Validation #
     ##############
@@ -175,15 +177,13 @@ def cli(
             verbose.information(f"Excluding targets from the file located at '{exclude_file}'.")
         targeter.parse_exclusions_file(exclude_file)
 
-    #########
-    # IPV4s #
-    #########
+    ############
+    # Analysis #
+    ############
+    if not silent:
+        verbose.information("Analyzing the targets.")
     if len(targeter.ipv4) > 0:
-        if not silent:
-            verbose.information("Analyzing the IPV4 targets.")
-
         ipv4s_ = ipv4s.analyze(targeter.ipv4)
-
         if json:
             ipv4s.print_as_json(ipv4s_, not no_color)
         elif table:
@@ -191,21 +191,23 @@ def cli(
         else:
             ipv4s.print_as_normal(ipv4s_, not no_color)
 
-    #########
-    # CIDRs #
-    #########
     if len(targeter.cidr_ipv4) > 0:
-        if not silent:
-            verbose.information("Analyzing the CIDR targets.")
-
-        ipv4s_ = cidrs.analyze(targeter.cidr_ipv4)
-
+        ipv4s_ = cidrs.analyze(targeter.cidr_ipv4, are_v4=True)
         if json:
             cidrs.print_as_json(ipv4s_, not no_color)
         elif table:
             cidrs.print_as_table(ipv4s_, not no_color)
         else:
             cidrs.print_as_normal(ipv4s_, not no_color)
+
+    if len(targeter.fqdn) > 0:
+        fqdns_ = fqdns.analyze(targeter.fqdn)
+        if json:
+            fqdns.print_as_json(fqdns_, not no_color)
+        elif table:
+            fqdns.print_as_table(fqdns_, not no_color)
+        else:
+            fqdns.print_as_normal(fqdns_, not no_color)
 
 
 if __name__ == "__main__":

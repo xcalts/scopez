@@ -2,40 +2,30 @@ import rich.progress
 import rich.table
 import rich.json
 import rich.box
-import pydantic
 import ipwhois
 
 import ipaddress
-import time
 
 import verbose
+import models
 
 
-class CIDR(pydantic.BaseModel):
-    cidr: str = ""
-    number_of_hosts: int = 0
-    visibility: str = ""
-    asn_country_code: str = ""
-    asn_description: str = ""
-    network: str = ""
-
-
-def analyze(cidrs: list[str]) -> list[CIDR]:
+def analyze(cidrs: list[str], are_v4: bool) -> list[models.CIDR]:
     c = verbose.console
 
-    final: list[CIDR] = []
+    final: list[models.CIDR] = []
 
     with rich.progress.Progress(rich.progress.SpinnerColumn(), transient=True) as p:
         task = p.add_task("", total=len(cidrs))
 
         for cidr in cidrs:
-            cidr_obj = CIDR()
+            cidr_obj = models.CIDR()
             cidr_obj.cidr = cidr
 
             ########
             # Math #
             ########
-            network = ipaddress.IPv4Network(cidr, strict=False)
+            network = ipaddress.IPv4Network(cidr, strict=False) if are_v4 else ipaddress.IPv6Network(cidr, strict=False)
             cidr_obj.number_of_hosts = network.num_addresses - 2
 
             ##############
@@ -62,11 +52,11 @@ def analyze(cidrs: list[str]) -> list[CIDR]:
     return final
 
 
-def print_as_table(cidrs: list[CIDR], highlight: bool) -> None:
+def print_as_table(cidrs: list[models.CIDR], highlight: bool) -> None:
     c = verbose.console
     t = rich.table.Table(box=rich.box.ASCII)
 
-    t.add_column("CIDR")
+    t.add_column("models.CIDR")
     t.add_column("Possible # of Hosts")
     t.add_column("Visibility")
     t.add_column("ASN Country")
@@ -86,14 +76,14 @@ def print_as_table(cidrs: list[CIDR], highlight: bool) -> None:
     c.print(t, highlight=highlight)
 
 
-def print_as_json(cidrs: list[CIDR], highlight: bool) -> None:
+def print_as_json(cidrs: list[models.CIDR], highlight: bool) -> None:
     c = verbose.console
 
     for cidr in cidrs:
         c.print(rich.json.JSON(cidr.model_dump_json(), indent=None, highlight=highlight))
 
 
-def print_as_normal(cidrs: list[CIDR], highlight: bool) -> None:
+def print_as_normal(cidrs: list[models.CIDR], highlight: bool) -> None:
     c = verbose.console
 
     for cidr in cidrs:

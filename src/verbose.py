@@ -26,6 +26,8 @@ def print_banner() -> None:
 ▐▌   ▐▌   ▐▌ ▐▌▐▌ ▐▌▐▌      ▗▞▘
  ▝▀▚▖▐▌   ▐▌ ▐▌▐▛▀▘ ▐▛▀▀▘ ▗▞▘  
 ▗▄▄▞▘▝▚▄▄▖▝▚▄▞▘▐▌   ▐▙▄▄▖▐▙▄▄▄▖ {__version__}
+        
+        https://github.com/xcalts/scopez
 """
 
     console.print(logo, highlight=False)

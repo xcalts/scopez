@@ -8,7 +8,7 @@
     <img src=".github/logo.svg" alt="Logo" height="100" />
   </a>
   <p align="center">
-    Scopez is a targets analyzer tool written in python with a focus in simplicity.
+    Scopez is a Python-based target analysis tool built with simplicity in mind.
     <br />
     <a href="https://github.com/xcalts/scopez"><strong>Explore the docs »</strong></a>
     <br />
@@ -22,16 +22,22 @@
 ## Features
 
 - Parses a file filled with targets
-- Analyzes IPs and CIDRs, calculates network information and grabs RDAP data
-- Multiple input support - **STDIN/FILE/HOST/IP/URL**
-- Multiple output support - **JSON/TXT/STDOUT**
+- Does IP networks **math**
+- Captures **RDAP** data
+- **Pings** IPs and FQDNs
+- Displays **DNS chains**
+- Multiple input support - **STDIN/FILE/CIDR/IP/FQDN/URL**
+- Multiple output support - **TABLE/JSON/TXT/STDOUT**
 
 ## Usage
 
 ```
-scopez -help
-
 Usage: scopez [OPTIONS]
+
+DEBUG:
+  -version   Show the version and exit.
+  -no-color  Disable colors in CLI output.
+  -silent    Display only results in output.
 
 INPUT:
   -target           Targets to analyze (comma-separated).
@@ -42,16 +48,13 @@ INPUT:
 OUTPUT:
   -output  File to write output to (optional).
   -json    Write output in JSON lines format.
-  -csv     Write output in csv format.
-
-DEBUG:
-  -no-color  Disable colors in CLI output.
-  -silent    Display only results in output.
-  -version   Show the version and exit.
+  -table   Write output in Table format.
 
 OTHER:
   -help  Show this message and exit.
 ```
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ## Developing
 
@@ -83,6 +86,16 @@ Follow the instructions below to build a standalone `scopez` executable.
 > (.venv) pip install --upgrade cx_Freeze
 > (.venv) python3 setup_cx.py build
 ```
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+## Dependencies
+
+- [click](https://github.com/pallets/click)
+- [requests](https://github.com/psf/requests)
+- [rich](https://github.com/Textualize/rich)
+- [pydantic](https://github.com/pydantic/pydantic)
+- [ipwhois](https://github.com/secynic/ipwhois)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
