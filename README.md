@@ -146,6 +146,6 @@ You can also simply open an issue with the tag "enhancement".
 [issues-shield]: https://img.shields.io/github/issues/xcalts/scopez.svg?style=for-the-badge
 [issues-url]: https://github.com/xcalts/scopez/issues
 [license-shield]: https://img.shields.io/github/license/xcalts/scopez.svg?style=for-the-badge
-[license-url]: https://github.com/xcalts/scopez/blob/master/LICENSE.txt
+[license-url]: https://github.com/xcalts/scopez/blob/master/LICENSE
 [python-shield]: https://img.shields.io/badge/-python-blue?style=for-the-badge
 [python-url]: https://www.python.org/
