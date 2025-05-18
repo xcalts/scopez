@@ -7,7 +7,7 @@ cx_Freeze.setup(
     author="Christos Kaltsas",
     author_email="christos@xcalts.co",
     python_requires=">3.12.5",
-    description="Scopez is intended to help verify the scope during bug bounty programs and penetration testing.",
+    description="Scopez verifies connectivity to target servers, reveals CDN presence, and provides detailed target insights like reachability and RDAP.",
     url="https://github.com/xcalts/scopez",
     options={
         "build_exe": {
