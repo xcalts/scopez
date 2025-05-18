@@ -24,7 +24,8 @@ echo "Version updated to $NEW_VERSION in:
 - src/__version__.py"
 
 echo "Pushing to Github"
-git checkout main
-git pull origin main
+git add -A
+git commit -m "feat: $NEWVERSION"
+git push origin main
 git tag -a "$NEW_VERSION" -m "$NEW_VERSION"
 git push origin "$NEW_VERSION"

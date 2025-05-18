@@ -3,7 +3,7 @@ import cx_Freeze  # type: ignore
 
 cx_Freeze.setup(
     name="scopez",
-    version="v0.0.3",
+    version="v0.0.4",
     author="Christos Kaltsas",
     author_email="christos@xcalts.co",
     python_requires=">3.12.5",
