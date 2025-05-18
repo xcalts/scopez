@@ -97,12 +97,15 @@ def print_as_normal(cidrs: list[models.CIDR], highlight: bool) -> None:
             )
 
 
-def get_results(cidrs: list[models.CIDR]) -> None:
+def get_results(cidrs: list[models.CIDR], json: bool) -> None:
     results: list[str] = []
 
     for cidr in cidrs:
-        results.append(
-            f"{cidr.type},{cidr.cidr},{cidr.number_of_hosts},{cidr.visibility},{cidr.asn_country_code},{cidr.asn_description},{cidr.network}"
-        )
+        if not json:
+            results.append(
+                f"{cidr.type},{cidr.cidr},{cidr.number_of_hosts},{cidr.visibility},{cidr.asn_country_code},{cidr.asn_description},{cidr.network}"
+            )
+        else:
+            results.append(cidr.model_dump_json())
 
     return results

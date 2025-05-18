@@ -1,9 +1,12 @@
 import fqdn
 import pydantic
+import rich.panel
 
 import ipaddress
 import sys
 import urllib.parse
+
+import verbose
 
 
 class Targeter(pydantic.BaseModel):
@@ -145,6 +148,64 @@ class Targeter(pydantic.BaseModel):
             + len(self.cidr_ipv6)
             + len(self.url)
         )
+
+    def print_targets(self, highlight: bool) -> None:
+        """Prints the parsed targets in a beautifull format.
+
+        Args:
+            prefix (str, optional): Prefix text to input on every line of the output. Defaults to "".
+        """
+        console = verbose.console
+
+        if len(self.ipv4) > 0:
+            console.print(rich.panel.Panel.fit("IP Addresses (v4)"))
+            for i in self.ipv4:
+                console.print(f" - 💻 '{i}'", highlight=highlight)
+
+        if len(self.ipv4_with_port) > 0:
+            console.print(rich.panel.Panel.fit("IP Addresses with Port (v4)"))
+            for i in self.ipv4_with_port:
+                console.print(f" - 💻 '{i}'", highlight=highlight)
+
+        if len(self.ipv6) > 0:
+            console.print(rich.panel.Panel.fit("IP Addresses (v6)"))
+            for i in self.ipv6:
+                console.print(f" - 💻 '{i}'", highlight=highlight)
+
+        if len(self.ipv6_with_port) > 0:
+            console.print(rich.panel.Panel.fit("IP Addresses with Port (v6)"))
+            for i in self.ipv6_with_port:
+                console.print(f" - 💻 '{i}'", highlight=highlight)
+
+        if len(self.fqdn) > 0:
+            console.print(rich.panel.Panel.fit("FQDNs"))
+            for f in self.fqdn:
+                console.print(f" - 🔖 '{f}'", highlight=highlight)
+
+        if len(self.fqnd_with_port) > 0:
+            console.print(rich.panel.Panel.fit("FQDNs with Port"))
+            for f in self.fqnd_with_port:
+                console.print(f" - 🔖 '{f}'", highlight=highlight)
+
+        if len(self.cidr_ipv4) > 0:
+            console.print(rich.panel.Panel.fit("CIDRs (v4)"))
+            for c in self.cidr_ipv4:
+                console.print(f" - 🏭 '{c}'", highlight=highlight)
+
+        if len(self.cidr_ipv6) > 0:
+            console.print(rich.panel.Panel.fit("CIDRs (v6)"))
+            for c in self.cidr_ipv6:
+                console.print(f" - 🏭 '{c}'", highlight=highlight)
+
+        if len(self.url) > 0:
+            console.print(rich.panel.Panel.fit("URLs"))
+            for u in self.url:
+                console.print(f" - 🌎 '{u}'", highlight=highlight)
+
+        if len(self.invalid) > 0:
+            console.print(rich.panel.Panel.fit("Invalids"))
+            for i in self.invalid:
+                console.print(f" - 💔 '{i}'", highlight=highlight)
 
     def _remove_from_list(self, target_list: list[str], item: str) -> None:
         """Helper function to remove an item from a list if it exists."""

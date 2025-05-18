@@ -1,6 +1,7 @@
 import click
 
 import sys
+import urllib3
 
 from __version__ import __version__
 import cidrs
@@ -9,6 +10,12 @@ import ipv4s
 import targets
 import validation
 import verbose
+import urls
+
+# Suppress only the `InsecureRequestWarning`` from `urllib3`.
+import warnings
+
+warnings.simplefilter("ignore", urllib3.exceptions.InsecureRequestWarning)
 
 
 class CustomOption(click.Option):
@@ -54,6 +61,27 @@ CONTEXT_SETTINGS = dict(max_content_width=120, help_option_names=["-help"])
 @click.version_option(
     __version__,
     "-version",
+    cls=CustomOption,
+    category="DEBUG",
+)
+@click.option(
+    "-no-color",
+    help="Disable colors in CLI output.",
+    is_flag=True,
+    cls=CustomOption,
+    category="DEBUG",
+)
+@click.option(
+    "-silent",
+    help="Display only results in output.",
+    is_flag=True,
+    cls=CustomOption,
+    category="DEBUG",
+)
+@click.option(
+    "-simulate",
+    help="Display the parsed targets.",
+    is_flag=True,
     cls=CustomOption,
     category="DEBUG",
 )
@@ -113,21 +141,10 @@ CONTEXT_SETTINGS = dict(max_content_width=120, help_option_names=["-help"])
     cls=CustomOption,
     category="OUTPUT",
 )
-@click.option(
-    "-no-color",
-    help="Disable colors in CLI output.",
-    is_flag=True,
-    cls=CustomOption,
-    category="DEBUG",
-)
-@click.option(
-    "-silent",
-    help="Display only results in output.",
-    is_flag=True,
-    cls=CustomOption,
-    category="DEBUG",
-)
 def cli(
+    no_color: bool,
+    silent: bool,
+    simulate: bool,
     target: str,
     list: str,
     exclude_targets: str,
@@ -135,8 +152,6 @@ def cli(
     output: str,
     json: bool,
     table: bool,
-    no_color: bool,
-    silent: bool,
 ) -> None:
 
     ##############
@@ -144,6 +159,12 @@ def cli(
     ##############
     if json and table:
         raise click.UsageError("You can not use '-json' and '-table' options at the same time.")
+
+    ###########
+    # Welcome #
+    ###########
+    if not silent:
+        verbose.print_banner()
 
     #########
     # Input #
@@ -170,22 +191,26 @@ def cli(
             verbose.information(f"Excluding targets from the file located at '{exclude_file}'.")
         targeter.parse_exclusions_file(exclude_file)
 
-    ###########
-    # Welcome #
-    ###########
-    if not silent:
-        verbose.print_banner()
+    ##############
+    # No Targets #
+    ##############
+    if targeter.total_count() == 0:
+        exit(1)
 
-        if targeter.total_count() == 0:
-            exit(1)
-
-        verbose.warning("Use with caution. You are responsible for your actions.")
+    ##############
+    # Simulation #
+    ##############
+    if simulate:
+        verbose.information("Simulating and printing the parsed targets.")
+        targeter.print_targets(highlight=not no_color)
+        exit(1)
 
     ############
     # Analysis #
     ############
     results = []
     if not silent:
+        verbose.warning("Use with caution. You are responsible for your actions.")
         verbose.information("Analyzing the targets.")
     if len(targeter.ipv4) > 0:
         ipv4s_ = ipv4s.analyze(targeter.ipv4)
@@ -195,7 +220,7 @@ def cli(
             ipv4s.print_as_table(ipv4s_, not no_color)
         else:
             ipv4s.print_as_normal(ipv4s_, not no_color)
-        results = results + ipv4s.get_results(ipv4s_)
+        results = results + ipv4s.get_results(ipv4s_, json=json)
     if len(targeter.cidr_ipv4) > 0:
         cidr_ipv4_ = cidrs.analyze(targeter.cidr_ipv4, are_v4=True)
         if json:
@@ -204,7 +229,7 @@ def cli(
             cidrs.print_as_table(cidr_ipv4_, not no_color)
         else:
             cidrs.print_as_normal(cidr_ipv4_, not no_color)
-        results = results + cidrs.get_results(cidr_ipv4_)
+        results = results + cidrs.get_results(cidr_ipv4_, json=json)
     if len(targeter.fqdn) > 0:
         fqdns_ = fqdns.analyze(targeter.fqdn)
         if json:
@@ -213,7 +238,16 @@ def cli(
             fqdns.print_as_table(fqdns_, not no_color)
         else:
             fqdns.print_as_normal(fqdns_, not no_color)
-        results = results + fqdns.get_results(fqdns_)
+        results = results + fqdns.get_results(fqdns_, json=json)
+    if len(targeter.url) > 0:
+        urls_ = urls.analyze(targeter.url)
+        if json:
+            urls.print_as_json(urls_, not no_color)
+        elif table:
+            urls.print_as_table(urls_, not no_color)
+        else:
+            urls.print_as_normal(urls_, not no_color)
+        results = results + urls.get_results(urls_, json=json)
 
     ##########
     # Output #
@@ -223,6 +257,8 @@ def cli(
             for r in results:
                 f.write(r)
                 f.write("\n")
+
+    exit(1)
 
 
 if __name__ == "__main__":

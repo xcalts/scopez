@@ -1,14 +1,16 @@
 <a id="readme-top"></a>
 
-[![Python][python-shield]][python-url]
-[![Contributors][contributors-shield]][contributors-url]
-[![Lint][lint-shield]][lint-url]
-[![Issues][issues-shield]][issues-url]
-
 <!-- PROJECT LOGO -->
 <br />
 
 <div align="center">
+
+[![Python][python-shield]][python-url]
+[![Stars][stars-shield]][stars-url]
+[![Contributors][contributors-shield]][contributors-url]
+[![Lint][lint-shield]][lint-url]
+[![Issues][issues-shield]][issues-url]
+
   <a href="https://github.com/xcalts/scopez">
     <img src="https://github.com/xcalts/scopez/raw/main/.github/logo.svg" alt="Logo" height="100" />
   </a>
@@ -34,17 +36,19 @@
 - Captures **RDAP** data
 - **Pings** IPs and FQDNs
 - Displays **DNS chains**
-- Bash friendly output
-- Multiple input support - **STDIN/FILE/CIDR/IP/FQDN**
+- Unix friendly input/output
+- Multiple input support - **STDIN/FILE/CIDR/IP/FQDN/URL**
 - Multiple output support - **TABLE/JSON/TXT/STDOUT**
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ## TODOs
 
-- Input support - **URL, IP with port, FQDN with port**
+- Input support - **IP with port, FQDN with port**
 - **Proxies** support for URL probing
 - **Markdown** output
+- **Configuration** YAML file
+- **Threads** support
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -67,6 +71,7 @@ DEBUG:
   -version   Show the version and exit.
   -no-color  Disable colors in CLI output.
   -silent    Display only results in output.
+  -simulate  Display the parsed targets.
 
 INPUT:
   -target           Targets to analyze (comma-separated).
@@ -126,6 +131,8 @@ Follow the instructions below to build a standalone `scopez` executable.
 - [rich](https://github.com/Textualize/rich)
 - [pydantic](https://github.com/pydantic/pydantic)
 - [ipwhois](https://github.com/secynic/ipwhois)
+- [fqdn](https://github.com/ypcrts/fqdn)
+- [cx_Freeze](https://github.com/marcelotduarte/cx_Freeze)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -153,15 +160,15 @@ You can also simply open an issue with the tag "enhancement".
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
 
-[contributors-shield]: https://img.shields.io/github/contributors/xcalts/scopez.svg?style=for-the-badge
+[contributors-shield]: https://img.shields.io/github/contributors/xcalts/scopez.svg?style=flat
 [contributors-url]: https://github.com/xcalts/scopez/graphs/contributors
-[lint-shield]: https://img.shields.io/github/actions/workflow/status/xcalts/scopez/ruff.yml?style=for-the-badge&label=ruff
+[lint-shield]: https://img.shields.io/github/actions/workflow/status/xcalts/scopez/ruff.yml?style=flat&label=ruff
 [lint-url]: https://github.com/xcalts/scopez/actions/workflows/ruff.yml
-[stars-shield]: https://img.shields.io/github/stars/xcalts/scopez.svg?style=for-the-badge
+[stars-shield]: https://img.shields.io/github/stars/xcalts/scopez.svg?style=flat
 [stars-url]: https://github.com/xcalts/scopez/stargazers
-[issues-shield]: https://img.shields.io/github/issues/xcalts/scopez.svg?style=for-the-badge
+[issues-shield]: https://img.shields.io/github/issues/xcalts/scopez.svg?style=flat
 [issues-url]: https://github.com/xcalts/scopez/issues
-[license-shield]: https://img.shields.io/github/license/xcalts/scopez.svg?style=for-the-badge
+[license-shield]: https://img.shields.io/github/license/xcalts/scopez.svg?style=flat
 [license-url]: https://github.com/xcalts/scopez/blob/master/LICENSE
-[python-shield]: https://img.shields.io/badge/-python-blue?style=for-the-badge
+[python-shield]: https://img.shields.io/badge/-python-black?style=flat
 [python-url]: https://www.python.org/

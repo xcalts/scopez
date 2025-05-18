@@ -29,3 +29,20 @@ class FQDN(pydantic.BaseModel):
     asn_description: str = ""
     network: str = ""
     pingable: bool = False
+
+
+class URL(pydantic.BaseModel):
+    type: str = "url"
+    url: str = ""
+    scheme: str = ""
+    username: str = ""
+    password: str = ""
+    fqdn: str = ""
+    port: int = ""
+    path: str = ""
+    dns_chain: str = ""
+    asn_country_code: str = ""
+    asn_description: str = ""
+    network: str = ""
+    pingable: bool = False
+    reachable: bool = False

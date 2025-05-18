@@ -105,12 +105,15 @@ def print_as_normal(ipv4s: list[models.IPV4], highlight: bool) -> None:
             )
 
 
-def get_results(ipv4s: list[models.IPV4]) -> None:
+def get_results(ipv4s: list[models.IPV4], json: bool) -> None:
     results: list[str] = []
 
     for ipv4 in ipv4s:
-        results.append(
-            f"{ipv4.type},{ipv4.ipv4},{ipv4.visibility},{ipv4.asn_country_code},{ipv4.asn_description},{ipv4.network},{"pingable" if ipv4.pingable else "not pingable"}"
-        )
+        if not json:
+            results.append(
+                f"{ipv4.type},{ipv4.ipv4},{ipv4.visibility},{ipv4.asn_country_code},{ipv4.asn_description},{ipv4.network},{"pingable" if ipv4.pingable else "not pingable"}"
+            )
+        else:
+            results.append(ipv4.model_dump_json())
 
     return results
