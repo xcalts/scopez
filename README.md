@@ -25,7 +25,7 @@
     <a href="https://pypi.org/project/scopez/">PyPI</a>
   </p>
 
-  <img src="https://github.com/xcalts/scopez/raw/main/.github/screenshot.png" alt="Logo" width="600" />
+<img src="https://github.com/xcalts/scopez/raw/main/.github/video.gif" />
 
 </div>
 
