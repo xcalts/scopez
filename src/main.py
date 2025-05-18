@@ -1,6 +1,7 @@
 import click
 
 import sys
+import urllib3
 
 from __version__ import __version__
 import cidrs
@@ -9,6 +10,12 @@ import ipv4s
 import targets
 import validation
 import verbose
+import urls
+
+# Suppress only the `InsecureRequestWarning`` from `urllib3`.
+import warnings
+
+warnings.simplefilter("ignore", urllib3.exceptions.InsecureRequestWarning)
 
 
 class CustomOption(click.Option):
@@ -189,13 +196,12 @@ def cli(
     ##############
     if targeter.total_count() == 0:
         exit(1)
-    else:
-        verbose.warning("Use with caution. You are responsible for your actions.")
 
     ##############
     # Simulation #
     ##############
     if simulate:
+        verbose.information("Simulating and printing the parsed targets.")
         targeter.print_targets(highlight=not no_color)
         exit(1)
 
@@ -204,6 +210,7 @@ def cli(
     ############
     results = []
     if not silent:
+        verbose.warning("Use with caution. You are responsible for your actions.")
         verbose.information("Analyzing the targets.")
     if len(targeter.ipv4) > 0:
         ipv4s_ = ipv4s.analyze(targeter.ipv4)
@@ -232,6 +239,15 @@ def cli(
         else:
             fqdns.print_as_normal(fqdns_, not no_color)
         results = results + fqdns.get_results(fqdns_)
+    if len(targeter.url) > 0:
+        urls_ = urls.analyze(targeter.url)
+        if json:
+            urls.print_as_json(urls_, not no_color)
+        elif table:
+            urls.print_as_table(urls_, not no_color)
+        else:
+            urls.print_as_normal(urls_, not no_color)
+        results = results + urls.get_results(urls_)
 
     ##########
     # Output #
