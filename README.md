@@ -45,6 +45,8 @@
 - Input support - **URL, IP with port, FQDN with port**
 - **Proxies** support for URL probing
 - **Markdown** output
+- **Configuration** YAML file
+- **Threads** support
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -126,6 +128,7 @@ Follow the instructions below to build a standalone `scopez` executable.
 - [rich](https://github.com/Textualize/rich)
 - [pydantic](https://github.com/pydantic/pydantic)
 - [ipwhois](https://github.com/secynic/ipwhois)
+- [fqdn](https://github.com/ypcrts/fqdn)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
