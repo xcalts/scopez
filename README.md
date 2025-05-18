@@ -34,7 +34,7 @@
 - Captures **RDAP** data
 - **Pings** IPs and FQDNs
 - Displays **DNS chains**
-- Bash friendly output
+- Unix friendly input/output
 - Multiple input support - **STDIN/FILE/CIDR/IP/FQDN**
 - Multiple output support - **TABLE/JSON/TXT/STDOUT**
 
@@ -69,6 +69,7 @@ DEBUG:
   -version   Show the version and exit.
   -no-color  Disable colors in CLI output.
   -silent    Display only results in output.
+  -simulate  Display the parsed targets.
 
 INPUT:
   -target           Targets to analyze (comma-separated).
