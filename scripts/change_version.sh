@@ -25,7 +25,7 @@ echo "Version updated to $NEW_VERSION in:
 
 echo "Pushing to Github"
 git add -A
-git commit -m "feat: $NEWVERSION"
+git commit -m "feat: $NEW_VERSION"
 git push origin main
 git tag -a "$NEW_VERSION" -m "$NEW_VERSION"
 git push origin "$NEW_VERSION"
