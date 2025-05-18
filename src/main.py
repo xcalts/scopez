@@ -58,6 +58,20 @@ CONTEXT_SETTINGS = dict(max_content_width=120, help_option_names=["-help"])
     category="DEBUG",
 )
 @click.option(
+    "-no-color",
+    help="Disable colors in CLI output.",
+    is_flag=True,
+    cls=CustomOption,
+    category="DEBUG",
+)
+@click.option(
+    "-silent",
+    help="Display only results in output.",
+    is_flag=True,
+    cls=CustomOption,
+    category="DEBUG",
+)
+@click.option(
     "-target",
     help="Targets to analyze (comma-separated).",
     type=str,
@@ -112,20 +126,6 @@ CONTEXT_SETTINGS = dict(max_content_width=120, help_option_names=["-help"])
     is_flag=True,
     cls=CustomOption,
     category="OUTPUT",
-)
-@click.option(
-    "-no-color",
-    help="Disable colors in CLI output.",
-    is_flag=True,
-    cls=CustomOption,
-    category="DEBUG",
-)
-@click.option(
-    "-silent",
-    help="Display only results in output.",
-    is_flag=True,
-    cls=CustomOption,
-    category="DEBUG",
 )
 def cli(
     target: str,
