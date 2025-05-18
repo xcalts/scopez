@@ -15,7 +15,7 @@
     <img src="https://github.com/xcalts/scopez/raw/main/.github/logo.svg" alt="Logo" height="100" />
   </a>
   <p align="center">
-    Scopez is a Python-based target analysis tool built with simplicity in mind.
+    Scopez is intended to help verify the scope during bug bounty programs and penetration testing.
     <br />
     <br />
     <a href="https://github.com/xcalts/scopez/issues/new?labels=bug&template=bug-report---.md">Report Bug</a>
