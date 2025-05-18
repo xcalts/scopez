@@ -72,6 +72,13 @@ CONTEXT_SETTINGS = dict(max_content_width=120, help_option_names=["-help"])
     category="DEBUG",
 )
 @click.option(
+    "-simulate",
+    help="Display the parsed targets.",
+    is_flag=True,
+    cls=CustomOption,
+    category="DEBUG",
+)
+@click.option(
     "-target",
     help="Targets to analyze (comma-separated).",
     type=str,
@@ -128,6 +135,9 @@ CONTEXT_SETTINGS = dict(max_content_width=120, help_option_names=["-help"])
     category="OUTPUT",
 )
 def cli(
+    no_color: bool,
+    silent: bool,
+    simulate: bool,
     target: str,
     list: str,
     exclude_targets: str,
@@ -135,8 +145,6 @@ def cli(
     output: str,
     json: bool,
     table: bool,
-    no_color: bool,
-    silent: bool,
 ) -> None:
 
     ##############
@@ -184,6 +192,13 @@ def cli(
     else:
         verbose.warning("Use with caution. You are responsible for your actions.")
 
+    ##############
+    # Simulation #
+    ##############
+    if simulate:
+        targeter.print_targets(highlight=not no_color)
+        exit(1)
+
     ############
     # Analysis #
     ############
@@ -226,6 +241,8 @@ def cli(
             for r in results:
                 f.write(r)
                 f.write("\n")
+
+    exit(1)
 
 
 if __name__ == "__main__":
