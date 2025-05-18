@@ -129,6 +129,7 @@ Follow the instructions below to build a standalone `scopez` executable.
 - [pydantic](https://github.com/pydantic/pydantic)
 - [ipwhois](https://github.com/secynic/ipwhois)
 - [fqdn](https://github.com/ypcrts/fqdn)
+- [cx_Freeze](https://github.com/marcelotduarte/cx_Freeze)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
