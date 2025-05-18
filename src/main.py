@@ -220,7 +220,7 @@ def cli(
             ipv4s.print_as_table(ipv4s_, not no_color)
         else:
             ipv4s.print_as_normal(ipv4s_, not no_color)
-        results = results + ipv4s.get_results(ipv4s_)
+        results = results + ipv4s.get_results(ipv4s_, json=json)
     if len(targeter.cidr_ipv4) > 0:
         cidr_ipv4_ = cidrs.analyze(targeter.cidr_ipv4, are_v4=True)
         if json:
@@ -229,7 +229,7 @@ def cli(
             cidrs.print_as_table(cidr_ipv4_, not no_color)
         else:
             cidrs.print_as_normal(cidr_ipv4_, not no_color)
-        results = results + cidrs.get_results(cidr_ipv4_)
+        results = results + cidrs.get_results(cidr_ipv4_, json=json)
     if len(targeter.fqdn) > 0:
         fqdns_ = fqdns.analyze(targeter.fqdn)
         if json:
@@ -238,7 +238,7 @@ def cli(
             fqdns.print_as_table(fqdns_, not no_color)
         else:
             fqdns.print_as_normal(fqdns_, not no_color)
-        results = results + fqdns.get_results(fqdns_)
+        results = results + fqdns.get_results(fqdns_, json=json)
     if len(targeter.url) > 0:
         urls_ = urls.analyze(targeter.url)
         if json:
@@ -247,7 +247,7 @@ def cli(
             urls.print_as_table(urls_, not no_color)
         else:
             urls.print_as_normal(urls_, not no_color)
-        results = results + urls.get_results(urls_)
+        results = results + urls.get_results(urls_, json=json)
 
     ##########
     # Output #

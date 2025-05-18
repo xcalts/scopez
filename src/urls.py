@@ -266,12 +266,15 @@ def print_as_normal(urls: list[models.URL], highlight: bool) -> None:
             )
 
 
-def get_results(urls: list[models.URL]) -> None:
+def get_results(urls: list[models.URL], json: bool) -> None:
     results: list[str] = []
 
     for fqdn in urls:
-        results.append(
-            f"{fqdn.type},{fqdn.fqdn},{fqdn.dns_chain},{fqdn.asn_country_code},{fqdn.asn_description},{fqdn.network},{"pingable" if fqdn.pingable else "not pingable"},{"reachable" if fqdn.pingable else "not reachable"}"
-        )
+        if not json:
+            results.append(
+                f"{fqdn.type},{fqdn.fqdn},{fqdn.dns_chain},{fqdn.asn_country_code},{fqdn.asn_description},{fqdn.network},{"pingable" if fqdn.pingable else "not pingable"},{"reachable" if fqdn.pingable else "not reachable"}"
+            )
+        else:
+            results.append(fqdn.model_dump_json())
 
     return results
