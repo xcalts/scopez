@@ -35,14 +35,14 @@
 - **Pings** IPs and FQDNs
 - Displays **DNS chains**
 - Unix friendly input/output
-- Multiple input support - **STDIN/FILE/CIDR/IP/FQDN**
+- Multiple input support - **STDIN/FILE/CIDR/IP/FQDN/URL**
 - Multiple output support - **TABLE/JSON/TXT/STDOUT**
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ## TODOs
 
-- Input support - **URL, IP with port, FQDN with port**
+- Input support - **IP with port, FQDN with port**
 - **Proxies** support for URL probing
 - **Markdown** output
 - **Configuration** YAML file
