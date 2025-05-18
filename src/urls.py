@@ -57,13 +57,15 @@ def analyze(urls: list[str]) -> list[models.URL]:
         for url in urls:
             parsed_url = urllib.parse.urlparse(url)
 
-            parsed_port = parsed_url.port if parsed_url.port != None else 443 if parsed_url.scheme == "https" else 80
+            parsed_port = (
+                parsed_url.port if parsed_url.port is not None else 443 if parsed_url.scheme == "https" else 80
+            )
 
             url_obj = models.URL(
                 url=url,
                 scheme=parsed_url.scheme,
-                username=parsed_url.username if parsed_url.username != None else "",
-                password=parsed_url.password if parsed_url.password != None else "",
+                username=parsed_url.username if parsed_url.username is not None else "",
+                password=parsed_url.password if parsed_url.password is not None else "",
                 fqdn=parsed_url.hostname,
                 port=parsed_port,
                 path=parsed_url.path,
