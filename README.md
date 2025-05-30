@@ -18,6 +18,9 @@
     Scopez verifies connectivity to target servers, reveals CDN presence, and provides detailed target insights like reachability and RDAP.
     <br />
     <br />
+    !! It does not run properly in Windows !!
+    <br />
+    <br />
     <a href="https://github.com/xcalts/scopez/issues/new?labels=bug&template=bug-report---.md">Report Bug</a>
     ·
     <a href="https://github.com/xcalts/scopez/issues/new?labels=enhancement&template=feature-request---.md">Request Feature</a>
