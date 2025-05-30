@@ -37,6 +37,7 @@
 - **Pings** IPs and FQDNs
 - Displays **DNS chains**
 - Unix friendly input/output
+- **Threads** support
 - Multiple input support - **STDIN/FILE/CIDR/IP/FQDN/URL**
 - Multiple output support - **TABLE/JSON/TXT/STDOUT**
 
@@ -48,7 +49,6 @@
 - **Proxies** support for URL probing
 - **Markdown** output
 - **Configuration** YAML file
-- **Threads** support
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -80,9 +80,11 @@ INPUT:
   -exclude-file     List of targets to exclude from analysis (file).
 
 OUTPUT:
-  -output  File to write output to (optional).
-  -json    Write output in JSON lines format.
-  -table   Write output in Table format.
+  -json   Write output in JSON lines format.
+  -table  Write output in Table format.
+
+TWEAK:
+  -threads  The max number of worker threads.
 
 OTHER:
   -help  Show this message and exit.
@@ -102,6 +104,7 @@ In order to start developing you will need to to follow the instructions below.
 > (.venv) pip install ruff pre-commit
 > (.venv) pip install -e .
 > (.venv) scopez --version
+> (.venv) ruff check --fix
 ```
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
