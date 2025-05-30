@@ -1,4 +1,3 @@
-import rich.console
 
 from __version__ import __version__
 

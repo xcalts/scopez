@@ -193,7 +193,6 @@ def cli(
     ############
     # Analysis #
     ############
-    results = []
     analyzer = analysis.Analyzer()
     verbose.info("Analyze the targets.")
     if len(targeter.ipv4s) > 0:
@@ -208,7 +207,7 @@ def cli(
     ##########
     # stdout #
     ##########
-    verbose.info(f"Print the results in the stdout.")
+    verbose.info("Print the results in the stdout.")
     verbose.SILENT = False
     if len(targeter.ipv4s) > 0:
         if table:
