@@ -1,5 +1,11 @@
 name: Lint python code using Ruff
-on: push
+
+on:
+  push:
+    # Skip runs on the main branch
+    branches-ignore:
+      - main
+
 jobs:
   build:
     runs-on: ubuntu-latest
