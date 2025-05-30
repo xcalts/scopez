@@ -1,6 +1,0 @@
-google.com
-amazon.com
-facebook.com
-4.2.2.2
-103.21.244.0/22
-https://spotify.com

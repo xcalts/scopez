@@ -1,88 +1,66 @@
 import click
+import rich.console
 
+import os
 import sys
 import urllib3
+import warnings
+import signal
+import types
 
 from __version__ import __version__
-import cidrs
-import fqdns
-import ipv4s
+import analysis
 import targets
 import validation
 import verbose
-import urls
+import utils
+import print
 
-# Suppress only the `InsecureRequestWarning`` from `urllib3`.
-import warnings
 
 warnings.simplefilter("ignore", urllib3.exceptions.InsecureRequestWarning)
-
-
-class CustomOption(click.Option):
-    def __init__(self, *args, **kwargs):
-        self.category = kwargs.pop("category", None)
-        super().__init__(*args, **kwargs)
-
-
-class CustomCommand(click.Command):
-    """It instructs the `click` library to list commands in the order that we define their functions."""
-
-    def list_commands(self, ctx: click.Context) -> list[str]:
-        """
-        List the commands in the order that we define their functions.
-
-        Args:
-            ctx (click.Context): The click context.
-
-        Returns:
-            list[str]: The list of commands in the order that we define their functions.
-
-        """
-        return list(self.commands)
-
-    def format_options(self, ctx, formatter):
-        categories = {}
-        for param in self.get_params(ctx):
-            if isinstance(param, click.Option):
-                cat = getattr(param, "category", "OTHER")
-                categories.setdefault(cat, []).append(param)
-        for category, params in categories.items():
-            with formatter.section(category):
-                formatter.write_dl([(p.opts[0], p.help or "") for p in params])
-
-
 CONTEXT_SETTINGS = dict(max_content_width=120, help_option_names=["-help"])
+
+
+def ctrl_c_signal_handler(sig: int, frame: types.FrameType | None) -> None:
+    """Handle the case where the user sends a CTRL-C keyboard interrupt.
+
+    Args:
+        sig (int): Signal number (e.g., SIGINT).
+        frame (FrameType | None): Current stack frame at the time of the signal.
+    """
+    verbose.info("'Ctrl+C!' was pressed. Exit.", False)
+    os._exit(1)
 
 
 @click.command(
     context_settings=CONTEXT_SETTINGS,
-    cls=CustomCommand,
+    cls=utils.CustomCommand,
 )
 @click.version_option(
     __version__,
     "-version",
-    cls=CustomOption,
+    cls=utils.CustomOption,
     category="DEBUG",
 )
 @click.option(
     "-no-color",
     help="Disable colors in CLI output.",
     is_flag=True,
-    cls=CustomOption,
+    cls=utils.CustomOption,
     category="DEBUG",
 )
 @click.option(
     "-silent",
     help="Display only results in output.",
     is_flag=True,
-    cls=CustomOption,
+    cls=utils.CustomOption,
     category="DEBUG",
 )
 @click.option(
     "-simulate",
     help="Display the parsed targets.",
     is_flag=True,
-    cls=CustomOption,
+    cls=utils.CustomOption,
     category="DEBUG",
 )
 @click.option(
@@ -90,7 +68,7 @@ CONTEXT_SETTINGS = dict(max_content_width=120, help_option_names=["-help"])
     help="Targets to analyze (comma-separated).",
     type=str,
     default="",
-    cls=CustomOption,
+    cls=utils.CustomOption,
     category="INPUT",
 )
 @click.option(
@@ -99,7 +77,7 @@ CONTEXT_SETTINGS = dict(max_content_width=120, help_option_names=["-help"])
     type=str,
     default="",
     callback=validation.validate_file_exists,
-    cls=CustomOption,
+    cls=utils.CustomOption,
     category="INPUT",
 )
 @click.option(
@@ -107,7 +85,7 @@ CONTEXT_SETTINGS = dict(max_content_width=120, help_option_names=["-help"])
     help="Targets to exclude from analysis (comma-separated).",
     type=str,
     default="",
-    cls=CustomOption,
+    cls=utils.CustomOption,
     category="INPUT",
 )
 @click.option(
@@ -116,30 +94,30 @@ CONTEXT_SETTINGS = dict(max_content_width=120, help_option_names=["-help"])
     type=str,
     default="",
     callback=validation.validate_file_exists,
-    cls=CustomOption,
+    cls=utils.CustomOption,
     category="INPUT",
-)
-@click.option(
-    "-output",
-    help="File to write output to (optional).",
-    type=str,
-    default="",
-    cls=CustomOption,
-    category="OUTPUT",
 )
 @click.option(
     "-json",
     help="Write output in JSON lines format.",
     is_flag=True,
-    cls=CustomOption,
+    cls=utils.CustomOption,
     category="OUTPUT",
 )
 @click.option(
     "-table",
     help="Write output in Table format.",
     is_flag=True,
-    cls=CustomOption,
+    cls=utils.CustomOption,
     category="OUTPUT",
+)
+@click.option(
+    "-threads",
+    help="The max number of worker threads.",
+    type=int,
+    default=10,
+    cls=utils.CustomOption,
+    category="TWEAK",
 )
 def cli(
     no_color: bool,
@@ -149,116 +127,121 @@ def cli(
     list: str,
     exclude_targets: str,
     exclude_file: str,
-    output: str,
     json: bool,
     table: bool,
+    threads: int,
 ) -> None:
+    ##########
+    # Global #
+    ##########
+    verbose.SILENT = silent
+    verbose.HIGHLIGHT = False
+    verbose.SOFT_WRAP = True
+    verbose.CONSOLE = rich.console.Console(no_color=no_color)
 
-    ##############
-    # Validation #
-    ##############
+    ###############
+    # CLI Signals #
+    ###############
+    signal.signal(signal.SIGINT, ctrl_c_signal_handler)
+
+    ##################
+    # CLI Validation #
+    ##################
     if json and table:
         raise click.UsageError("You can not use '-json' and '-table' options at the same time.")
 
     ###########
     # Welcome #
     ###########
-    if not silent:
-        verbose.print_banner()
+    verbose.print_banner(silent)
+    verbose.warning("Use with caution. You are responsible for your actions.")
 
     #########
     # Input #
     #########
     targeter = targets.Targeter()
     if not sys.stdin.isatty():
-        if not silent:
-            verbose.information("Parsing targets from the STDIN.")
+        verbose.info("Parse targets from the STDIN.")
         targeter.parse_targets_file("-")
     elif target != "":
-        if not silent:
-            verbose.information("Parsing targets from the 'target' CLI parameter.")
+        verbose.info("Parse targets from the 'target' CLI parameter.")
         targeter.parse_targets_str(target)
     elif list != "":
-        if not silent:
-            verbose.information(f"Parsing targets from the file located at '{list}'.")
+        verbose.info(f"Parse targets from the file located at '{list}'.")
         targeter.parse_targets_file(list)
     elif exclude_targets != "":
-        if not silent:
-            verbose.information("Excluding targets from the 'exclude_targets' CLI parameter.")
+        verbose.info("Exclude targets from the 'exclude_targets' CLI parameter.")
         targeter.parse_exclusions_str(exclude_targets)
     elif exclude_file != "":
-        if not silent:
-            verbose.information(f"Excluding targets from the file located at '{exclude_file}'.")
+        verbose.info(f"Exclude targets from the file located at '{exclude_file}'.")
         targeter.parse_exclusions_file(exclude_file)
 
     ##############
     # No Targets #
     ##############
     if targeter.total_count() == 0:
-        exit(1)
+        raise click.UsageError("You must supply at least one target.")
 
     ##############
     # Simulation #
     ##############
     if simulate:
-        verbose.information("Simulating and printing the parsed targets.")
-        targeter.print_targets(highlight=not no_color)
+        verbose.info("Simulate and print the parsed targets.")
+        targeter.print_targets()
         exit(1)
 
     ############
     # Analysis #
     ############
-    results = []
-    if not silent:
-        verbose.warning("Use with caution. You are responsible for your actions.")
-        verbose.information("Analyzing the targets.")
-    if len(targeter.ipv4) > 0:
-        ipv4s_ = ipv4s.analyze(targeter.ipv4)
-        if json:
-            ipv4s.print_as_json(ipv4s_, not no_color)
-        elif table:
-            ipv4s.print_as_table(ipv4s_, not no_color)
-        else:
-            ipv4s.print_as_normal(ipv4s_, not no_color)
-        results = results + ipv4s.get_results(ipv4s_, json=json)
-    if len(targeter.cidr_ipv4) > 0:
-        cidr_ipv4_ = cidrs.analyze(targeter.cidr_ipv4, are_v4=True)
-        if json:
-            cidrs.print_as_json(cidr_ipv4_, not no_color)
-        elif table:
-            cidrs.print_as_table(cidr_ipv4_, not no_color)
-        else:
-            cidrs.print_as_normal(cidr_ipv4_, not no_color)
-        results = results + cidrs.get_results(cidr_ipv4_, json=json)
-    if len(targeter.fqdn) > 0:
-        fqdns_ = fqdns.analyze(targeter.fqdn)
-        if json:
-            fqdns.print_as_json(fqdns_, not no_color)
-        elif table:
-            fqdns.print_as_table(fqdns_, not no_color)
-        else:
-            fqdns.print_as_normal(fqdns_, not no_color)
-        results = results + fqdns.get_results(fqdns_, json=json)
-    if len(targeter.url) > 0:
-        urls_ = urls.analyze(targeter.url)
-        if json:
-            urls.print_as_json(urls_, not no_color)
-        elif table:
-            urls.print_as_table(urls_, not no_color)
-        else:
-            urls.print_as_normal(urls_, not no_color)
-        results = results + urls.get_results(urls_, json=json)
+    analyzer = analysis.Analyzer()
+    verbose.info("Analyze the targets.")
+    if len(targeter.ipv4s) > 0:
+        analyzer.analyze_ipv4s(targeter.ipv4s, threads)
+    if len(targeter.cidrs_v4) > 0:
+        analyzer.analyze_cidrs(targeter.cidrs_v4, threads)
+    if len(targeter.fqdns) > 0:
+        analyzer.analyze_fqdns(targeter.fqdns, threads)
+    if len(targeter.urls) > 0:
+        analyzer.analyze_urls(targeter.urls, threads)
 
     ##########
-    # Output #
+    # stdout #
     ##########
-    if output != "":
-        with open(output, "w") as f:
-            for r in results:
-                f.write(r)
-                f.write("\n")
+    verbose.info("Print the results in the stdout.")
+    verbose.SILENT = False
+    if len(targeter.ipv4s) > 0:
+        if table:
+            print.Printer.print_ipv4s_as_table(analyzer.analyzed_ipv4s)
+        elif json:
+            print.Printer.print_as_json(analyzer.analyzed_ipv4s)
+        else:
+            print.Printer.print_ipv4s_as_raw(analyzer.analyzed_ipv4s)
+    if len(targeter.cidrs_v4) > 0:
+        if table:
+            print.Printer.print_cidrs_as_table(analyzer.analyzed_cidrs)
+        elif json:
+            print.Printer.print_as_json(analyzer.analyzed_cidrs)
+        else:
+            print.Printer.print_cidrs_as_raw(analyzer.analyzed_cidrs)
+    if len(targeter.fqdns) > 0:
+        if table:
+            print.Printer.print_fqdns_as_table(analyzer.analyzed_fqdns)
+        elif json:
+            print.Printer.print_as_json(analyzer.analyzed_fqdns)
+        else:
+            print.Printer.print_fqdns_as_raw(analyzer.analyzed_fqdns)
+    if len(targeter.urls) > 0:
+        if table:
+            print.Printer.print_urls_as_table(analyzer.analyzed_urls)
+        elif json:
+            print.Printer.print_as_json(analyzer.analyzed_urls)
+        else:
+            print.Printer.print_urls_as_raw(analyzer.analyzed_urls)
 
-    exit(1)
+    ############
+    # Beautify #
+    ############
+    verbose.normal("\n")
 
 
 if __name__ == "__main__":
