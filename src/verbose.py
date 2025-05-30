@@ -1,27 +1,13 @@
-import rich.console
-from rich.logging import RichHandler
-
-import logging
-import logging.handlers
 
 from __version__ import __version__
 
-
-#################
-# Setup logging #
-#################
-LOGFORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-LOGFORMAT_RICH = "%(message)s"
-error_console = rich.console.Console(stderr=True)
-rh = RichHandler(console=error_console)
-rh._log_render.omit_repeated_times = False
-rh.setFormatter(logging.Formatter(LOGFORMAT_RICH))
-logging.basicConfig(level=logging.INFO, format=LOGFORMAT, handlers=[rh])
-log = logging.getLogger()
-console = rich.console.Console()
+SILENT = False
+HIGHLIGHT = False
+SOFT_WRAP = False
+CONSOLE = {}
 
 
-def print_banner() -> None:
+def print_banner(silent: bool, highlight: bool = True) -> None:
     logo = f"""
  ▗▄▄▖ ▗▄▄▖ ▗▄▖ ▗▄▄▖ ▗▄▄▄▖▗▄▄▄▄▖
 ▐▌   ▐▌   ▐▌ ▐▌▐▌ ▐▌▐▌      ▗▞▘
@@ -30,13 +16,35 @@ def print_banner() -> None:
         
         https://github.com/xcalts/scopez
 """
+    if not silent:
+        CONSOLE.print(logo, highlight=False)
 
-    console.print(logo, highlight=False)
+
+def critical(message: str) -> None:
+    if not SILENT:
+        CONSOLE.print(f"[bold red][CRITICAL][/bold red] {message}", highlight=HIGHLIGHT, soft_wrap=SOFT_WRAP)
+
+
+def error(message: str) -> None:
+    if not SILENT:
+        CONSOLE.print(f"[red][ERROR]   [/red] {message}", highlight=HIGHLIGHT, soft_wrap=SOFT_WRAP)
 
 
 def warning(message: str) -> None:
-    log.warning(message)
+    if not SILENT:
+        CONSOLE.print(f"[yellow][WARNING] [/yellow] {message}", highlight=HIGHLIGHT, soft_wrap=SOFT_WRAP)
 
 
-def information(message: str) -> None:
-    log.info(message)
+def info(message: str) -> None:
+    if not SILENT:
+        CONSOLE.print(f"[green][INFO]    [/green] {message}", highlight=HIGHLIGHT, soft_wrap=SOFT_WRAP)
+
+
+def debug(message: str) -> None:
+    if not SILENT:
+        CONSOLE.print(f"[blue][DEBUG]   [/blue] {message}", highlight=HIGHLIGHT, soft_wrap=SOFT_WRAP)
+
+
+def normal(message: str) -> None:
+    if not SILENT:
+        CONSOLE.print(message, highlight=HIGHLIGHT, soft_wrap=SOFT_WRAP)
