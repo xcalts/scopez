@@ -1,6 +1,7 @@
 import click
 
 import os
+import hashlib
 
 
 def validate_file_exists(ctx, param, value):
@@ -22,3 +23,14 @@ def _file_exists(filepath: str) -> bool:
 
     """
     return os.path.exists(filepath)
+
+def _verify_sha256(filepath: str, expected_hash: str) -> bool:
+    sha256 = hashlib.sha256()
+    
+    with open(filepath, "rb") as f:
+        for chunk in iter(lambda: f.read(8192), b""):
+            sha256.update(chunk)
+
+    file_hash = sha256.hexdigest()
+    
+    return file_hash == expected_hash.lower()

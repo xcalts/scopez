@@ -6,6 +6,8 @@
 <div align="center">
 
 [![Python][python-shield]][python-url]
+[![Linux][linux-shield]][linux-url]
+[![MacOS][macos-shield]][macos-url]
 [![Stars][stars-shield]][stars-url]
 [![Contributors][contributors-shield]][contributors-url]
 [![Lint][lint-shield]][lint-url]
@@ -16,9 +18,6 @@
   </a>
   <p align="center">
     Scopez verifies connectivity to target servers, reveals CDN presence, and provides detailed target insights like reachability and RDAP.
-    <br />
-    <br />
-    !! It does not run properly in Windows !!
     <br />
     <br />
     <a href="https://github.com/xcalts/scopez/issues/new?labels=bug&template=bug-report---.md">Report Bug</a>
@@ -43,10 +42,11 @@
 - **Threads** support
 - Multiple input support - **STDIN/FILE/CIDR/IP/FQDN/URL**
 - Multiple output support - **TABLE/JSON/TXT/STDOUT**
+- Single executable file using `nuitka` - **easy installation**
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-## TODOs
+## TODO
 
 - Input support - **IP with port, FQDN with port**
 - **Proxies** support for URL probing
@@ -138,7 +138,8 @@ Follow the instructions below to build a standalone `scopez` executable.
 - [pydantic](https://github.com/pydantic/pydantic)
 - [ipwhois](https://github.com/secynic/ipwhois)
 - [fqdn](https://github.com/ypcrts/fqdn)
-- [cx_Freeze](https://github.com/marcelotduarte/cx_Freeze)
+- [geoip2-ipv4](https://github.com/datasets/geoip2-ipv4)
+- [nuitka](https://github.com/Nuitka/Nuitka)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -168,7 +169,7 @@ You can also simply open an issue with the tag "enhancement".
 
 [contributors-shield]: https://img.shields.io/github/contributors/xcalts/scopez.svg?style=flat
 [contributors-url]: https://github.com/xcalts/scopez/graphs/contributors
-[lint-shield]: https://img.shields.io/github/actions/workflow/status/xcalts/scopez/ruff.yml?style=flat&label=ruff
+[lint-shield]: https://img.shields.io/github/actions/workflow/status/xcalts/scopez/ruff.yml?style=flat&label=ruff-lint
 [lint-url]: https://github.com/xcalts/scopez/actions/workflows/ruff.yml
 [stars-shield]: https://img.shields.io/github/stars/xcalts/scopez.svg?style=flat
 [stars-url]: https://github.com/xcalts/scopez/stargazers
@@ -176,5 +177,9 @@ You can also simply open an issue with the tag "enhancement".
 [issues-url]: https://github.com/xcalts/scopez/issues
 [license-shield]: https://img.shields.io/github/license/xcalts/scopez.svg?style=flat
 [license-url]: https://github.com/xcalts/scopez/blob/master/LICENSE
-[python-shield]: https://img.shields.io/badge/-python-black?style=flat
+[python-shield]: https://img.shields.io/badge/Python-black?logo=python
 [python-url]: https://www.python.org/
+[linux-shield]: https://img.shields.io/badge/Linux-black?logo=linux
+[linux-url]: https://www.linux.org/
+[macos-shield]: https://img.shields.io/badge/Darwin-black?logo=macos
+[macos-url]: https://www.apple.com/

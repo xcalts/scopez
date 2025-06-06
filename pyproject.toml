@@ -2,6 +2,9 @@
 requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
+[tool.setuptools.package-data]
+your_package = ["geoip2-ipv4.csv"]
+
 # --- Project Settings ---
 [project]
 name = "scopez"
@@ -27,6 +30,8 @@ dependencies = [
     "ipwhois",
     # Validates fully-qualified domain names against RFC 1123, so that they are acceptable to modern bowsers.
     "fqdn",
+    # A fast, powerful, flexible and easy to use open source data analysis and manipulation tool.
+    "pandas",
 ]
 
 # --- URLs ---

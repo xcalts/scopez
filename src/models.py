@@ -1,4 +1,5 @@
 import pydantic
+import typing
 
 
 class CIDR(pydantic.BaseModel):
@@ -8,7 +9,9 @@ class CIDR(pydantic.BaseModel):
     visibility: str = ""
     asn_country_code: str = ""
     asn_description: str = ""
-    network: str = ""
+    asn_network: str = ""
+    geoip_continent: str = ""
+    geoip_country: str = ""
 
 
 class IPV4(pydantic.BaseModel):
@@ -17,18 +20,19 @@ class IPV4(pydantic.BaseModel):
     visibility: str = ""
     asn_country_code: str = ""
     asn_description: str = ""
-    network: str = ""
+    asn_network: str = ""
+    geoip_continent: str = ""
+    geoip_country: str = ""
     pingable: bool = False
 
 
 class FQDN(pydantic.BaseModel):
     type: str = "fqdn"
     fqdn: str = ""
-    dns_chain: str = ""
-    asn_country_code: str = ""
-    asn_description: str = ""
-    network: str = ""
-    pingable: bool = False
+    dns_chain: list[str] = ""
+    hosts_found: bool = False
+    
+    destination_ips: list[IPV4] = []
 
 
 class URL(pydantic.BaseModel):
@@ -37,12 +41,19 @@ class URL(pydantic.BaseModel):
     scheme: str = ""
     username: str = ""
     password: str = ""
-    fqdn: str = ""
     port: int = ""
     path: str = ""
-    dns_chain: str = ""
-    asn_country_code: str = ""
-    asn_description: str = ""
-    network: str = ""
-    pingable: bool = False
     reachable: bool = False
+    
+    fqdn: FQDN = None
+
+
+class GeoIPRecord(pydantic.BaseModel):
+    network: str
+    geoname_id: int
+    continent_code: typing.Optional[str]
+    continent_name: typing.Optional[str]
+    country_iso_code: typing.Optional[str]
+    country_name: typing.Optional[str]
+    is_anonymous_proxy: int
+    is_satellite_provider: int
