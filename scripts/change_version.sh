@@ -27,13 +27,6 @@ sed -i '' -E "s/^version = \".*\"/version = \"$NEW_VERSION\"/" pyproject.toml
 echo "   → pyproject.toml updated."
 
 # ------------------------------------------------------------------------------
-# Update version in setup_cx.py
-# ------------------------------------------------------------------------------
-echo "🔄 Updating version in setup_cx.py..."
-sed -i '' -E "s/(version=)\"[^\"]+\"/\1\"$NEW_VERSION\"/" setup_cx.py
-echo "   → setup_cx.py updated."
-
-# ------------------------------------------------------------------------------
 # Update version in src/__version__.py
 # ------------------------------------------------------------------------------
 echo "🔄 Updating version in src/__version__.py..."
@@ -46,7 +39,7 @@ echo
 # Commit changes
 # ------------------------------------------------------------------------------
 echo "📝 Staging and committing version bump..."
-git add pyproject.toml setup_cx.py src/__version__.py
+git add pyproject.toml src/__version__.py
 git commit -m "feat: bump version to $NEW_VERSION"
 echo "   → Commit created."
 

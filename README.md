@@ -112,24 +112,6 @@ In order to start developing you will need to to follow the instructions below.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-## Building Standalones
-
-Follow the instructions below to build a standalone `scopez` executable.
-
-> Note: currently only `elf` standalone executables are supported.
-
-**Linux**
-
-```txt
-> python3 -m venv .venv
-> source .venv/bin/activate
-> (.venv) pip install -e .
-> (.venv) pip install --upgrade cx_Freeze
-> (.venv) python3 setup_cx.py build
-```
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
 ## Dependencies
 
 - [click](https://github.com/pallets/click)
