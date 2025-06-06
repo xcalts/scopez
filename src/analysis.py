@@ -2,6 +2,7 @@ import pydantic
 import ipwhois
 import dns.resolver
 import requests
+import pandas
 
 import ipaddress
 import subprocess
@@ -9,6 +10,7 @@ import os
 import concurrent.futures
 import random
 import urllib.parse
+import time
 
 import models
 import verbose
@@ -21,6 +23,25 @@ class Analyzer(pydantic.BaseModel):
     analyzed_cidrs: list[models.CIDR] = []
     analyzed_fqdns: list[models.FQDN] = []
     analyzed_urls: list[models.URL] = []
+    geoip_records: list[models.GeoIPRecord] = []
+    
+    def parse_geoip_data(self, geoip_csv_database_filepath: str):
+        data_frame = pandas.read_csv(geoip_csv_database_filepath).where(pandas.notnull, None)
+        records = data_frame.to_dict(orient='records')
+        
+        for r in records:
+            self.geoip_records.append(
+                models.GeoIPRecord(
+                network=r.get("network"),
+                geoname_id=r.get("geoname_id"),
+                continent_code=r.get("continent_code"),
+                continent_name=r.get("continent_name"),
+                country_iso_code=r.get("country_iso_code"),
+                country_name=r.get("country_name"),
+                is_anonymous_proxy=r.get("is_anonymous_proxy"),
+                is_satellite_provider=r.get("is_satellite_provider")
+                )
+            )
 
     def analyze_ipv4s(self, ipv4s: list[str], no_threads: int) -> None:
         """Analyze the IP addresses (v4) and populate them with information.
@@ -30,10 +51,11 @@ class Analyzer(pydantic.BaseModel):
             no_threads(int): The number of worker threads to run in-parallel.
         """
         with concurrent.futures.ThreadPoolExecutor(max_workers=no_threads) as executor:
-            futures = [executor.submit(self._process_ipv4, ipv4) for ipv4 in ipv4s]
+            futures = [executor.submit(self._populate_ipv4, ip) for ip in ipv4s]
 
             for future in concurrent.futures.as_completed(futures):
                 ipv4_obj = future.result()
+                verbose.normal(ipv4_obj.ipv4)
                 self.analyzed_ipv4s.append(ipv4_obj)
 
     def analyze_cidrs(self, cidrs: list[str], no_threads: int) -> None:
@@ -48,6 +70,7 @@ class Analyzer(pydantic.BaseModel):
 
             for future in concurrent.futures.as_completed(futures):
                 cidr_obj = future.result()
+                verbose.normal(cidr_obj.cidr)
                 self.analyzed_cidrs.append(cidr_obj)
 
     def analyze_fqdns(self, fqdns: list[str], no_threads: int) -> None:
@@ -58,11 +81,12 @@ class Analyzer(pydantic.BaseModel):
             no_threads(int): The number of worker threads to run in-parallel.
         """
         with concurrent.futures.ThreadPoolExecutor(max_workers=no_threads) as executor:
-            futures = [executor.submit(self._process_fqdn, fqdn) for fqdn in fqdns]
+            futures = [executor.submit(self._populate_fqdn, fqdn) for fqdn in fqdns]
 
             for future in concurrent.futures.as_completed(futures):
-                fqdn_objs = future.result()
-                self.analyzed_fqdns.extend(fqdn_objs)
+                fqdn_obj = future.result()
+                verbose.normal(fqdn_obj.fqdn)
+                self.analyzed_fqdns.append(fqdn_obj)
 
     def analyze_urls(self, urls: list[str], no_threads: int) -> None:
         """Analyze the URLS and populate them with information.
@@ -72,14 +96,14 @@ class Analyzer(pydantic.BaseModel):
             no_threads(int): The number of worker threads to run in-parallel.
         """
         with concurrent.futures.ThreadPoolExecutor(max_workers=no_threads) as executor:
-            futures = [executor.submit(self._process_url, url) for url in urls]
+            futures = [executor.submit(self._populate_url, url) for url in urls]
 
             for future in concurrent.futures.as_completed(futures):
-                url_objs = future.result()
-                self.analyzed_urls.extend(url_objs)
+                url_obj = future.result()
+                verbose.normal(url_obj.url)
+                self.analyzed_urls.append(url_obj)
 
-    def _process_ipv4(self, ipv4: str) -> models.IPV4:
-        verbose.normal(ipv4)
+    def _populate_ipv4(self, ipv4: str) -> models.IPV4:
         ipv4_obj = models.IPV4()
         ipv4_obj.ipv4 = ipv4
 
@@ -99,14 +123,28 @@ class Analyzer(pydantic.BaseModel):
         if ipv4_obj.visibility == "Public":
             whois = ipwhois.IPWhois(ipv4_obj.ipv4)
             rdap = whois.lookup_rdap(depth=1) or {}
-            ipv4_obj.network = rdap.get("network", {}).get("name", "").replace(",", "")
+            ipv4_obj.asn_network = rdap.get("network", {}).get("name", "").replace(",", "")
             ipv4_obj.asn_country_code = rdap.get("asn_country_code")
             ipv4_obj.asn_description = rdap.get("asn_description", "").replace(",", "")
         else:
-            ipv4_obj.network = "N/A"
+            ipv4_obj.asn_network = "N/A"
             ipv4_obj.asn_country_code = "N/A"
             ipv4_obj.asn_description = "N/A"
 
+        #########
+        # GeoIP #
+        #########
+        if ipv4_obj.visibility == "Public":
+            for r in self.geoip_records:
+                network = ipaddress.IPv4Network(r.network)
+                
+                if ip in network:
+                    ipv4_obj.geoip_continent = r.continent_name
+                    ipv4_obj.geoip_country = r.country_name
+        else:
+            ipv4_obj.geoip_continent = "N/A"
+            ipv4_obj.geoip_country = "N/A"
+        
         ########
         # Ping #
         ########
@@ -120,8 +158,7 @@ class Analyzer(pydantic.BaseModel):
 
         return ipv4_obj
 
-    def _process_cidr(self, cidr: str) -> models.CIDR:
-        verbose.normal(cidr)
+    def _populate_cidr(self, cidr: str) -> models.CIDR:
         cidr_obj = models.CIDR()
         cidr_obj.cidr = cidr
 
@@ -143,346 +180,116 @@ class Analyzer(pydantic.BaseModel):
             ip = cidr.split("/")[0]
             whois = ipwhois.IPWhois(ip)
             rdap = whois.lookup_rdap(depth=1) or {}
-            cidr_obj.network = rdap.get("network", {}).get("name", "").replace(",", "")
+            cidr_obj.asn_network = rdap.get("network", {}).get("name", "").replace(",", "")
             cidr_obj.asn_country_code = rdap.get("asn_country_code")
             cidr_obj.asn_description = rdap.get("asn_description", "").replace(",", "")
         else:
-            cidr_obj.network = "N/A"
+            cidr_obj.asn_network = "N/A"
             cidr_obj.asn_country_code = "N/A"
             cidr_obj.asn_description = "N/A"
+    
+        #########
+        # GeoIP #
+        #########
+        if cidr_obj.visibility == "Public":
+            for r in self.geoip_records:
+                if cidr_obj.asn_network == r.network:
+                    cidr_obj.geoip_continent = r.continent_name
+                    cidr_obj.geoip_country = r.country_name
+        else:
+            cidr_obj.geoip_continent = "N/A"
+            cidr_obj.geoip_country = "N/A"
 
         return cidr_obj
 
-    def _process_fqdn(self, fqdn: str) -> list[models.FQDN]:
-        verbose.normal(fqdn)
-        _results: list[models.FQDN] = []
-        _cname: str = ""
-        _ips: list[str] = []
-        _dns_server = random.choice(DNS_SERVERS)
-
+    def _populate_fqdn(self, fqdn: str) -> models.FQDN:
         ######################################################################################
-        # DNS                                                                                #
+        # Process                                                                            #
         # ---                                                                                #
-        # Note: We need to use different DNS every time otherwise we trigger a DOS response. #
-        # 1. Check if there are CNAME records for hostname.                                  #
-        #    - If there CNAME records, then check for A records for the found CNAME          #
+        # Notes:                                                                             #
+        # - We need to use different DNS every time otherwise we trigger a DOS response.     #
+        # - A FQDN can point only to a *single* CNAME (RFC 1034 & RFC 2181).                 #
+        # - A FQDN can point to multiple IP addresses (Load-Balancing).                      #
+        # - A FQDN cannot have a CNAME and A/AAA records at the same time.                   #
+        # Code:                                                                              #
+        # - Keep a list of FQDNs to resolve.                                                 #
+        # - Ask DNS server for CNAME records of FQDN.                                        #
+        # - If there is a CNAME record, append it in the list of FQDNs to resolve.           #
         #    - else check for A records for the hostname.                                    #
         ######################################################################################
+        f = models.FQDN(
+            fqdn=fqdn,
+            dns_chain=[fqdn],
+            destination_ips=[]
+        )
+
+        #############################
+        # Discover the CNAME Chain. #
+        #############################
+        while(True):
+            cname_record = ""
+            try:
+                answer = dns.resolver.resolve_at(random.choice(DNS_SERVERS), f.dns_chain[-1], "CNAME")
+                time.sleep(1)
+                
+                for rdap in answer:
+                    cname_record = str(rdap.target).rstrip(".")  # Remove the trailing dot.
+            except dns.resolver.NXDOMAIN: # NXDOMAIN stands for Non-Existent Domain.
+                break
+            except dns.resolver.NoAnswer: # The domain does exist, but the specific DNS record type you're asking for is missing.
+                break
+            
+            f.dns_chain.append(cname_record)
+            
+        ############################################################
+        # For the last link in the DNS chain, check its A records. #
+        ############################################################
         try:
-            cname_records = dns.resolver.resolve_at(_dns_server, fqdn, "CNAME")
-            for rdap in cname_records:
-                _cname = str(rdap.target).rstrip(".")  # Remove the trailing dot.
-        except dns.resolver.NoNameservers:
-            fqdn_obj = models.FQDN(
-                fqdn=fqdn,
-                dns_chain=f"{fqdn} > NotFound",
-                asn_country_code="N/A",
-                asn_description="N/A",
-                network="N/A",
-                pingable=False,
-            )
-            _results.append(fqdn_obj)
-            return _results
+            answer = dns.resolver.resolve_at(random.choice(DNS_SERVERS), f.dns_chain[-1], "A")
+            time.sleep(1)
+            
+            resolved_ips = []
+            for rdap in answer:
+                resolved_ips.append(str(rdap.address))
+                
+            f.hosts_found = True
+
+            for ip in resolved_ips:
+                ip_obj = self._populate_ipv4(ip)
+                f.destination_ips.append(ip_obj)
         except dns.resolver.NoAnswer:
             pass
         except dns.resolver.NXDOMAIN:
-            fqdn_obj = models.FQDN(
-                fqdn=fqdn,
-                dns_chain=f"{fqdn} > NotExist",
-                asn_country_code="N/A",
-                asn_description="N/A",
-                network="N/A",
-                pingable=False,
-            )
-            _results.append(fqdn_obj)
-            return _results
+            pass
+        
+        return f
 
-        if _cname != "":
-            try:
-                a_records = dns.resolver.resolve_at(_dns_server, _cname, "A")
-
-                for rdap in a_records:
-                    _ips.append(str(rdap.address))
-
-                for ip in _ips:
-                    ########
-                    # RDAP #
-                    ########
-                    whois = ipwhois.IPWhois(ip)
-                    rdap = whois.lookup_rdap(depth=1)
-                    fqdn_obj = models.FQDN(
-                        fqdn=fqdn,
-                        dns_chain=f"{fqdn} > {_cname} > {ip}",
-                        asn_country_code=rdap.get("asn_country_code"),
-                        asn_description=rdap.get("asn_description").replace(",", ""),
-                        network=rdap.get("network").get("name").replace(",", ""),
-                    )
-
-                    ########
-                    # Ping #
-                    ########
-                    param = "-n" if os.sys.platform.lower() == "win32" else "-c"
-                    command = ["ping", param, "1", "-i 0.2", fqdn]
-                    fqdn_obj.pingable = subprocess.call(command, stdout=subprocess.DEVNULL) == 0
-
-                    _results.append(fqdn_obj)
-
-            except dns.resolver.NoAnswer:
-                pass
-
-            except dns.resolver.NXDOMAIN:
-                fqdn_obj = models.FQDN(
-                    fqdn=fqdn,
-                    dns_chain=f"{fqdn} > {_cname} > NotFound",
-                    asn_country_code="N/A",
-                    asn_description="N/A",
-                    network="N/A",
-                    pingable=False,
-                )
-                _results.append(fqdn_obj)
-                return _results
-        else:
-            try:
-                a_records = dns.resolver.resolve_at(_dns_server, fqdn, "A")
-
-                for rdap in a_records:
-                    _ips.append(str(rdap.address))
-
-                for ip in _ips:
-                    ########
-                    # RDAP #
-                    ########
-                    whois = ipwhois.IPWhois(ip)
-                    rdap = whois.lookup_rdap(depth=1)
-                    fqdn_obj = models.FQDN(
-                        fqdn=fqdn,
-                        dns_chain=f"{fqdn} > {ip}",
-                        asn_country_code=rdap.get("asn_country_code"),
-                        asn_description=rdap.get("asn_description").replace(",", ""),
-                        network=rdap.get("network").get("name").replace(",", ""),
-                        pingable=False,
-                    )
-
-                    ########
-                    # Ping #
-                    ########
-                    param = "-n" if os.sys.platform.lower() == "win32" else "-c"
-                    command = ["ping", param, "1", "-i 0.2", fqdn]
-                    fqdn_obj.pingable = subprocess.call(command, stdout=subprocess.DEVNULL) == 0
-
-                    _results.append(fqdn_obj)
-
-                return _results
-
-            except dns.resolver.NoAnswer:
-                pass
-
-            except dns.resolver.NXDOMAIN:
-                fqdn_obj = models.FQDN(
-                    fqdn=fqdn,
-                    dns_chain=f"{fqdn} > NotFound",
-                    asn_country_code="N/A",
-                    asn_description="N/A",
-                    network="N/A",
-                    pingable=False,
-                )
-                _results.append(fqdn_obj)
-                return _results
-
-    def _process_url(self, url: str) -> list[models.URL]:
-        verbose.normal(url)
-        _results: list[models.URL] = []
-        _cname: str = ""
-        _ips: list[str] = []
-        _dns_server = random.choice(DNS_SERVERS)
+    def _populate_url(self, url: str) -> models.URL:
 
         parsed_url = urllib.parse.urlparse(url)
         parsed_port = parsed_url.port if parsed_url.port is not None else 443 if parsed_url.scheme == "https" else 80
+        
+        u = models.URL(
+            url=url,
+            scheme=parsed_url.scheme,
+            username=parsed_url.username if parsed_url.username is not None else "",
+            password=parsed_url.password if parsed_url.password is not None else "",
+            port=parsed_port,
+            path=parsed_url.path,
+        )
+        
+        u.fqdn = self._populate_fqdn(parsed_url.hostname)
 
-        ######################################################################################
-        # DNS                                                                                #
-        # ---                                                                                #
-        # Note: We need to use different DNS every time otherwise we trigger a DOS response. #
-        # 1. Check if there are CNAME records for hostname.                                  #
-        #    - If there CNAME records, then check for A records for the found CNAME          #
-        #    - else check for A records for the hostname.                                    #
-        ######################################################################################
+        ########
+        # CURL #
+        ########
         try:
-            cname_records = dns.resolver.resolve_at(_dns_server, parsed_url.hostname, "CNAME")
-            for rdap in cname_records:
-                _cname = str(rdap.target).rstrip(".")  # Remove the trailing dot.
-        except dns.resolver.NoNameservers:
-            url_obj = models.URL(
-                url=parsed_url.geturl(),
-                scheme=parsed_url.scheme,
-                username=parsed_url.username if parsed_url.username is not None else "",
-                password=parsed_url.password if parsed_url.password is not None else "",
-                fqdn=parsed_url.hostname,
-                port=parsed_port,
-                path=parsed_url.path,
-                dns_chain=f"{parsed_url.hostname} > NotFound",
-                asn_country_code="N/A",
-                asn_description="N/A",
-                network="N/A",
-                pingable=False,
-            )
-            _results.append(url_obj)
-            return _results
-        except dns.resolver.NoAnswer:
-            pass
-        except dns.resolver.NXDOMAIN:
-            url_obj = models.URL(
-                url=parsed_url.geturl(),
-                scheme=parsed_url.scheme,
-                username=parsed_url.username if parsed_url.username is not None else "",
-                password=parsed_url.password if parsed_url.password is not None else "",
-                fqdn=parsed_url.hostname,
-                port=parsed_port,
-                path=parsed_url.path,
-                dns_chain=f"{parsed_url.hostname} > NotExist",
-                asn_country_code="N/A",
-                asn_description="N/A",
-                network="N/A",
-                pingable=False,
-            )
-            _results.append(url_obj)
-            return _results
-
-        if _cname != "":
-            try:
-                a_records = dns.resolver.resolve_at(_dns_server, _cname, "A")
-
-                for rdap in a_records:
-                    _ips.append(str(rdap.address))
-
-                for ip in _ips:
-                    url_obj = models.URL(
-                        url=parsed_url.geturl(),
-                        scheme=parsed_url.scheme,
-                        username=parsed_url.username if parsed_url.username is not None else "",
-                        password=parsed_url.password if parsed_url.password is not None else "",
-                        fqdn=parsed_url.hostname,
-                        port=parsed_port,
-                        path=parsed_url.path,
-                    )
-
-                    ########
-                    # RDAP #
-                    ########
-                    whois = ipwhois.IPWhois(ip)
-                    rdap = whois.lookup_rdap(depth=1)
-                    url_obj.dns_chain = f"{parsed_url.hostname} > {_cname} > {ip}"
-                    url_obj.asn_country_code = rdap.get("asn_country_code")
-                    url_obj.asn_description = rdap.get("asn_description").replace(",", "")
-                    url_obj.network = rdap.get("network").get("name").replace(",", "")
-
-                    ########
-                    # Ping #
-                    ########
-                    param = "-n" if os.sys.platform.lower() == "win32" else "-c"
-                    command = ["ping", param, "1", "-i 0.2", url_obj.fqdn]
-                    url_obj.pingable = subprocess.call(command, stdout=subprocess.DEVNULL) == 0
-
-                    ########
-                    # CURL #
-                    ########
-                    try:
-                        requests.get(url_obj.url, verify=False, timeout=2)
-                        url_obj.reachable = True
-                    except requests.exceptions.RequestException:
-                        url_obj.reachable = False
-
-                    _results.append(url_obj)
-
-            except dns.resolver.NoAnswer:
-                pass
-
-            except dns.resolver.NXDOMAIN:
-                url_obj = models.URL(
-                    url=parsed_url.geturl(),
-                    scheme=parsed_url.scheme,
-                    username=parsed_url.username if parsed_url.username is not None else "",
-                    password=parsed_url.password if parsed_url.password is not None else "",
-                    fqdn=parsed_url.hostname,
-                    port=parsed_port,
-                    path=parsed_url.path,
-                    dns_chain=f"{url} > {_cname} > NotFound",
-                    asn_country_code="N/A",
-                    asn_description="N/A",
-                    network="N/A",
-                    pingable=False,
-                )
-                _results.append(url_obj)
-                return _results
-        else:
-            try:
-                a_records = dns.resolver.resolve_at(_dns_server, parsed_url.hostname, "A")
-
-                for rdap in a_records:
-                    _ips.append(str(rdap.address))
-
-                for ip in _ips:
-                    url_obj = models.URL(
-                        url=parsed_url.geturl(),
-                        scheme=parsed_url.scheme,
-                        username=parsed_url.username if parsed_url.username is not None else "",
-                        password=parsed_url.password if parsed_url.password is not None else "",
-                        fqdn=parsed_url.hostname,
-                        port=parsed_port,
-                        path=parsed_url.path,
-                    )
-
-                    ########
-                    # RDAP #
-                    ########
-                    whois = ipwhois.IPWhois(ip)
-                    rdap = whois.lookup_rdap(depth=1)
-                    url_obj.dns_chain = f"{parsed_url.hostname} > {ip}"
-                    url_obj.asn_country_code = rdap.get("asn_country_code")
-                    url_obj.asn_description = rdap.get("asn_description").replace(",", "")
-                    url_obj.network = rdap.get("network").get("name").replace(",", "")
-
-                    ########
-                    # Ping #
-                    ########
-                    param = "-n" if os.sys.platform.lower() == "win32" else "-c"
-                    command = ["ping", param, "1", "-i 0.2", url_obj.fqdn]
-                    url_obj.pingable = subprocess.call(command, stdout=subprocess.DEVNULL) == 0
-
-                    ########
-                    # CURL #
-                    ########
-                    try:
-                        requests.get(url_obj.url, verify=False, timeout=2)
-                        url_obj.reachable = True
-                    except requests.exceptions.RequestException:
-                        url_obj.reachable = False
-
-                    _results.append(url_obj)
-
-                return _results
-
-            except dns.resolver.NoAnswer:
-                pass
-
-            except dns.resolver.NXDOMAIN:
-                url_obj = models.URL(
-                    url=parsed_url.geturl(),
-                    scheme=parsed_url.scheme,
-                    username=parsed_url.username if parsed_url.username is not None else "",
-                    password=parsed_url.password if parsed_url.password is not None else "",
-                    fqdn=parsed_url.hostname,
-                    port=parsed_port,
-                    path=parsed_url.path,
-                    dns_chain=f"{parsed_url.hostname} > NotFound",
-                    asn_country_code="N/A",
-                    asn_description="N/A",
-                    network="N/A",
-                    pingable=False,
-                )
-                _results.append(url_obj)
-                return _results
-
+            requests.get(u.url, verify=False, timeout=2)
+            u.reachable = True
+        except requests.exceptions.RequestException:
+            u.reachable = False
+        
+        return u
 
 DNS_SERVERS = [
     # Google

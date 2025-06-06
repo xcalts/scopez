@@ -28,7 +28,9 @@ class Printer:
         t.add_column("Visibility")
         t.add_column("ASN Country")
         t.add_column("ASN Description")
-        t.add_column("Network")
+        t.add_column("ASN Network")
+        t.add_column("GeoIP Continent")
+        t.add_column("GeoIP Country")
 
         for cidr in cidrs:
             t.add_row(
@@ -37,7 +39,9 @@ class Printer:
                 cidr.visibility,
                 cidr.asn_country_code,
                 cidr.asn_description,
-                cidr.network,
+                cidr.asn_network,
+                cidr.geoip_continent,
+                cidr.geoip_country,
             )
 
         verbose.normal(t)
@@ -46,7 +50,7 @@ class Printer:
     def print_cidrs_as_raw(cidrs: list[models.CIDR]) -> None:
         for cidr in cidrs:
             verbose.normal(
-                f"[white]{cidr.type}[/white],[green]{cidr.cidr}[/green],[yellow]{cidr.number_of_hosts}[/yellow],[yellow]{cidr.visibility}[/yellow],[red]{cidr.asn_country_code}[/red],[red]{cidr.asn_description}[/red],[red]{cidr.network}[/red]",
+                f"[white]{cidr.type}[/white],[green]{cidr.cidr}[/green],[yellow]{cidr.number_of_hosts}[/yellow],[yellow]{cidr.visibility}[/yellow],[red]{cidr.asn_country_code}[/red],[red]{cidr.asn_description}[/red],[red]{cidr.asn_network}[/red]",
             )
 
     #######
@@ -60,7 +64,9 @@ class Printer:
         t.add_column("Visibility")
         t.add_column("ASN Country")
         t.add_column("ASN Description")
-        t.add_column("Network")
+        t.add_column("ASN Network")
+        t.add_column("GeoIP Continent")
+        t.add_column("GeoIP Country")
         t.add_column("Pingable")
 
         for ipv4 in ipv4s:
@@ -69,7 +75,9 @@ class Printer:
                 ipv4.visibility,
                 ipv4.asn_country_code,
                 ipv4.asn_description,
-                ipv4.network,
+                ipv4.asn_network,
+                ipv4.geoip_continent,
+                ipv4.geoip_country,
                 "yes" if ipv4.pingable else "no",
             )
 
@@ -78,7 +86,7 @@ class Printer:
     def print_ipv4s_as_raw(ipv4s: list[models.IPV4]) -> None:
         for ipv4 in ipv4s:
             verbose.normal(
-                f"[white]{ipv4.type}[/white],[green]{ipv4.ipv4}[/green],[yellow]{ipv4.visibility}[/yellow],[red]{ipv4.asn_country_code}[/red],[red]{ipv4.asn_description}[/red],[red]{ipv4.network}[/red][blue],{"pingable" if ipv4.pingable else "not pingable"}[/blue]"
+                f"[white]{ipv4.type}[/white],[green]{ipv4.ipv4}[/green],[yellow]{ipv4.visibility}[/yellow],[red]{ipv4.asn_country_code}[/red],[red]{ipv4.asn_description}[/red],[red]{ipv4.asn_network}[/red][blue],{"pingable" if ipv4.pingable else "not pingable"}[/blue]"
             )
 
     #########
@@ -92,27 +100,50 @@ class Printer:
         t.add_column("DNS Chain")
         t.add_column("ASN Country")
         t.add_column("ASN Description")
-        t.add_column("Network")
+        t.add_column("ASN Network")
+        t.add_column("GeoIP Continent")
+        t.add_column("GeoIP Country")
         t.add_column("Pingable")
 
         for fqdn in fqdns:
-            t.add_row(
-                fqdn.fqdn,
-                fqdn.dns_chain,
-                fqdn.asn_country_code,
-                fqdn.asn_description,
-                fqdn.network,
-                "yes" if fqdn.pingable else "no",
-            )
+            if fqdn.hosts_found:
+                for ip in fqdn.destination_ips:
+                    t.add_row(
+                        fqdn.fqdn,
+                        " > ".join(fqdn.dns_chain) + f" > {ip.ipv4}",
+                        ip.asn_country_code,
+                        ip.asn_description,
+                        ip.asn_network,
+                        ip.geoip_continent,
+                        ip.geoip_country,
+                        "yes" if ip.pingable else "no",
+                    )
+            else:
+                t.add_row(
+                    fqdn.fqdn,
+                    " > ".join(fqdn.dns_chain) + " > Not Found",
+                    "N/A",
+                    "N/A",
+                    "N/A",
+                    "N/A",
+                    "N/A",
+                    "N/A",
+                )
 
         verbose.normal(t)
 
     @staticmethod
     def print_fqdns_as_raw(fqdns: list[models.FQDN]) -> None:
         for fqdn in fqdns:
-            verbose.normal(
-                f"[white]{fqdn.type}[/white],[green]{fqdn.fqdn}[/green],[yellow]{fqdn.dns_chain}[/yellow],[red]{fqdn.asn_country_code}[/red],[red]{fqdn.asn_description}[/red],[red]{fqdn.network}[/red],[blue]{"pingable" if fqdn.pingable else "not pingable"}[/blue]",
-            )
+            if fqdn.hosts_found:
+                for ip in fqdn.destination_ips:
+                    verbose.normal(
+                    f"[white]{fqdn.type}[/white],[green]{fqdn.fqdn}[/green],[yellow]{" > ".join(fqdn.dns_chain) + f" > {ip}"}[/yellow],[red]{ip.asn_country_code}[/red],[red]{ip.asn_description}[/red],[red]{ip.asn_network}[/red],[red]{ip.geoip_continent}[/red],[red]{ip.geoip_country}[/red],[blue]{"yes" if ip.pingable else "no"}[/blue]",
+                )
+            else:
+                verbose.normal(
+                    f"[white]{fqdn.type}[/white],[green]{fqdn.fqdn}[/green],[yellow]{" > ".join(fqdn.dns_chain) + " > Not Found"}[/yellow],[red]N/A[/red],[red]N/A[/red],[red]N/A[/red],[red]N/A[/red],[red]N/A[/red],[blue]N/A[/blue]",
+                )
 
     ########
     # URLs #
@@ -125,26 +156,50 @@ class Printer:
         t.add_column("DNS Chain")
         t.add_column("ASN Country")
         t.add_column("ASN Description")
-        t.add_column("Network")
+        t.add_column("ASN Network")
+        t.add_column("GeoIP Continent")
+        t.add_column("GeoIP Country")
         t.add_column("Pingable")
         t.add_column("Reachable")
 
         for url in urls:
-            t.add_row(
-                url.fqdn,
-                url.dns_chain,
-                url.asn_country_code,
-                url.asn_description,
-                url.network,
-                "yes" if url.pingable else "no",
-                "yes" if url.reachable else "no",
-            )
+            if url.fqdn.hosts_found:
+                for ip in url.fqdn.destination_ips:
+                    t.add_row(
+                        url.url,
+                        " > ".join(url.fqdn.dns_chain) + f" > {ip.ipv4}",
+                        ip.asn_country_code,
+                        ip.asn_description,
+                        ip.asn_network,
+                        ip.geoip_continent,
+                        ip.geoip_country,
+                        "yes" if ip.pingable else "no",
+                        "yes" if url.reachable else "no",
+                    )
+            else:
+                t.add_row(
+                    url.url,
+                    " > ".join(url.fqdn.dns_chain) + " > Not Found",
+                    "N/A",
+                    "N/A",
+                    "N/A",
+                    "N/A",
+                    "N/A",
+                    "N/A",
+                    "N/A",
+                )
 
         verbose.normal(t)
 
     @staticmethod
     def print_urls_as_raw(urls: list[models.URL]) -> None:
         for url in urls:
-            verbose.normal(
-                f"[white]{url.type}[/white],[green]{url.url}[/green],[yellow]{url.dns_chain}[/yellow],[red]{url.asn_country_code}[/red],[red]{url.asn_description}[/red],[red]{url.network}[/red],[blue]{"pingable" if url.pingable else "not pingable"}[/blue],[blue]{"reachable" if url.reachable else "not reachable"}[/blue]",
-            )
+            if url.fqdn.hosts_found:
+                for ip in url.fqdn.destination_ips:
+                    verbose.normal(
+                    f"[white]{url.type}[/white],[green]{url.url}[/green],[yellow]{" > ".join(url.fqdn.dns_chain) + f" > {ip}"}[/yellow],[red]{ip.asn_country_code}[/red],[red]{ip.asn_description}[/red],[red]{ip.asn_network}[/red],[red]{ip.geoip_continent}[/red],[red]{ip.geoip_country}[/red],[blue]{"yes" if ip.pingable else "no"}[/blue],[blue]{"yes" if url.reachable else "no"}[/blue]",
+                )
+            else:
+                verbose.normal(
+                    f"[white]{url.type}[/white],[green]{url.url}[/green],[yellow]{" > ".join(url.fqdn.dns_chain) + " > Not Found"}[/yellow],[red]N/A[/red],[red]N/A[/red],[red]N/A[/red],[red]N/A[/red],[red]N/A[/red],[blue]N/A[/blue],[blue]N/A[/blue]",
+                )

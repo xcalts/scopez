@@ -175,4 +175,6 @@ cython_debug/
 
 # Custom
 .DS_Store
-.data/
+geoip2-ipv4.csv
+main.build/
+main.dist/

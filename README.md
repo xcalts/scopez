@@ -168,7 +168,7 @@ You can also simply open an issue with the tag "enhancement".
 
 [contributors-shield]: https://img.shields.io/github/contributors/xcalts/scopez.svg?style=flat
 [contributors-url]: https://github.com/xcalts/scopez/graphs/contributors
-[lint-shield]: https://img.shields.io/github/actions/workflow/status/xcalts/scopez/ruff.yml?style=flat&label=ruff
+[lint-shield]: https://img.shields.io/github/actions/workflow/status/xcalts/scopez/ruff.yml?style=flat&label=ruff-lint
 [lint-url]: https://github.com/xcalts/scopez/actions/workflows/ruff.yml
 [stars-shield]: https://img.shields.io/github/stars/xcalts/scopez.svg?style=flat
 [stars-url]: https://github.com/xcalts/scopez/stargazers
@@ -180,5 +180,5 @@ You can also simply open an issue with the tag "enhancement".
 [python-url]: https://www.python.org/
 [linux-shield]: https://img.shields.io/badge/Linux-black?logo=linux
 [linux-url]: https://www.linux.org/
-[macos-shield]: https://img.shields.io/badge/MacOS-black?logo=macos
+[macos-shield]: https://img.shields.io/badge/Darwin-black?logo=macos
 [macos-url]: https://www.apple.com/

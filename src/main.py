@@ -1,5 +1,6 @@
 import click
 import rich.console
+import requests
 
 import os
 import sys
@@ -7,6 +8,7 @@ import urllib3
 import warnings
 import signal
 import types
+import platform
 
 from __version__ import __version__
 import analysis
@@ -131,6 +133,7 @@ def cli(
     table: bool,
     threads: int,
 ) -> None:
+    
     ##########
     # Global #
     ##########
@@ -138,6 +141,12 @@ def cli(
     verbose.HIGHLIGHT = False
     verbose.SOFT_WRAP = True
     verbose.CONSOLE = rich.console.Console(no_color=no_color)
+    
+    #########################
+    # Windows not Supported #
+    #########################
+    if platform.system() == 'Windows':
+        verbose.critical("You can not run 'scopez' in Windows. Only in Linux and Darwin.")
 
     ###############
     # CLI Signals #
@@ -149,12 +158,27 @@ def cli(
     ##################
     if json and table:
         raise click.UsageError("You can not use '-json' and '-table' options at the same time.")
-
+    
     ###########
     # Welcome #
     ###########
     verbose.print_banner(silent)
     verbose.warning("Use with caution. You are responsible for your actions.")
+    
+    ##########
+    # GeoIP2 #
+    ##########
+    verbose.info("Make sure 'geoip2-ipv4.csv' is downloaded.")
+    GEOIP_SHA256 = "4d5b63c8a4dc7d78d395de2106f1ff1a38a654da67cdecde80ba7fe55db4cc7a"
+    exe_location = os.path.dirname(os.path.abspath(__file__))
+    geoip_filepath = os.path.join(exe_location, "geoip2-ipv4.csv")
+    if not validation._file_exists(geoip_filepath) or not validation._verify_sha256(geoip_filepath, GEOIP_SHA256):
+        verbose.info("Download the geoip database from GitHub.")
+        GEOIP_URL = "https://raw.githubusercontent.com/datasets/geoip2-ipv4/refs/heads/main/data/geoip2-ipv4.csv"
+        response = requests.get(GEOIP_URL, verify=False, timeout=3600)
+        response.raise_for_status()
+        with open(geoip_filepath, "wb") as f:
+            f.write(response.content)
 
     #########
     # Input #
@@ -194,6 +218,7 @@ def cli(
     # Analysis #
     ############
     analyzer = analysis.Analyzer()
+    analyzer.parse_geoip_data(geoip_filepath)
     verbose.info("Analyze the targets.")
     if len(targeter.ipv4s) > 0:
         analyzer.analyze_ipv4s(targeter.ipv4s, threads)
@@ -215,28 +240,28 @@ def cli(
         elif json:
             print.Printer.print_as_json(analyzer.analyzed_ipv4s)
         else:
-            print.Printer.print_ipv4s_as_raw(analyzer.analyzed_ipv4s)
+            print.Printer.print_ipv4s_as_table(analyzer.analyzed_ipv4s)
     if len(targeter.cidrs_v4) > 0:
         if table:
             print.Printer.print_cidrs_as_table(analyzer.analyzed_cidrs)
         elif json:
             print.Printer.print_as_json(analyzer.analyzed_cidrs)
         else:
-            print.Printer.print_cidrs_as_raw(analyzer.analyzed_cidrs)
+            print.Printer.print_cidrs_as_table(analyzer.analyzed_cidrs)
     if len(targeter.fqdns) > 0:
         if table:
             print.Printer.print_fqdns_as_table(analyzer.analyzed_fqdns)
         elif json:
             print.Printer.print_as_json(analyzer.analyzed_fqdns)
         else:
-            print.Printer.print_fqdns_as_raw(analyzer.analyzed_fqdns)
+            print.Printer.print_fqdns_as_table(analyzer.analyzed_fqdns)
     if len(targeter.urls) > 0:
         if table:
             print.Printer.print_urls_as_table(analyzer.analyzed_urls)
         elif json:
             print.Printer.print_as_json(analyzer.analyzed_urls)
         else:
-            print.Printer.print_urls_as_raw(analyzer.analyzed_urls)
+            print.Printer.print_urls_as_table(analyzer.analyzed_urls)
 
     ############
     # Beautify #
