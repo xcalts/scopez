@@ -138,7 +138,8 @@ Follow the instructions below to build a standalone `scopez` executable.
 - [pydantic](https://github.com/pydantic/pydantic)
 - [ipwhois](https://github.com/secynic/ipwhois)
 - [fqdn](https://github.com/ypcrts/fqdn)
-- [cx_Freeze](https://github.com/marcelotduarte/cx_Freeze)
+- [geoip2-ipv4](https://github.com/datasets/geoip2-ipv4)
+- [nuitka](https://github.com/Nuitka/Nuitka)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
