@@ -146,7 +146,7 @@ def cli(
     # Windows not Supported #
     #########################
     if platform.system() == 'Windows':
-        verbose.critical("You can not run 'scopez' in Windows. Only in Linux and Darwin.")
+        verbose.critical("'scopez' is not so stables in Windows. Only in Linux and Darwin.")
 
     ###############
     # CLI Signals #
