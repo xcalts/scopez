@@ -24,22 +24,22 @@ class Analyzer(pydantic.BaseModel):
     analyzed_fqdns: list[models.FQDN] = []
     analyzed_urls: list[models.URL] = []
     geoip_records: list[models.GeoIPRecord] = []
-    
+
     def parse_geoip_data(self, geoip_csv_database_filepath: str):
         data_frame = pandas.read_csv(geoip_csv_database_filepath).where(pandas.notnull, None)
-        records = data_frame.to_dict(orient='records')
-        
+        records = data_frame.to_dict(orient="records")
+
         for r in records:
             self.geoip_records.append(
                 models.GeoIPRecord(
-                network=r.get("network"),
-                geoname_id=r.get("geoname_id"),
-                continent_code=r.get("continent_code"),
-                continent_name=r.get("continent_name"),
-                country_iso_code=r.get("country_iso_code"),
-                country_name=r.get("country_name"),
-                is_anonymous_proxy=r.get("is_anonymous_proxy"),
-                is_satellite_provider=r.get("is_satellite_provider")
+                    network=r.get("network"),
+                    geoname_id=r.get("geoname_id"),
+                    continent_code=r.get("continent_code"),
+                    continent_name=r.get("continent_name"),
+                    country_iso_code=r.get("country_iso_code"),
+                    country_name=r.get("country_name"),
+                    is_anonymous_proxy=r.get("is_anonymous_proxy"),
+                    is_satellite_provider=r.get("is_satellite_provider"),
                 )
             )
 
@@ -137,14 +137,14 @@ class Analyzer(pydantic.BaseModel):
         if ipv4_obj.visibility == "Public":
             for r in self.geoip_records:
                 network = ipaddress.IPv4Network(r.network)
-                
+
                 if ip in network:
                     ipv4_obj.geoip_continent = r.continent_name
                     ipv4_obj.geoip_country = r.country_name
         else:
             ipv4_obj.geoip_continent = "N/A"
             ipv4_obj.geoip_country = "N/A"
-        
+
         ########
         # Ping #
         ########
@@ -187,7 +187,7 @@ class Analyzer(pydantic.BaseModel):
             cidr_obj.asn_network = "N/A"
             cidr_obj.asn_country_code = "N/A"
             cidr_obj.asn_description = "N/A"
-    
+
         #########
         # GeoIP #
         #########
@@ -217,58 +217,73 @@ class Analyzer(pydantic.BaseModel):
         # - If there is a CNAME record, append it in the list of FQDNs to resolve.           #
         #    - else check for A records for the hostname.                                    #
         ######################################################################################
-        f = models.FQDN(
-            fqdn=fqdn,
-            dns_chain=[fqdn],
-            destination_ips=[]
-        )
+        f = models.FQDN(fqdn=fqdn, dns_chain=[fqdn], destination_ips=[])
 
         #############################
         # Discover the CNAME Chain. #
         #############################
-        while(True):
+        while True:
             cname_record = ""
             try:
                 answer = dns.resolver.resolve_at(random.choice(DNS_SERVERS), f.dns_chain[-1], "CNAME")
                 time.sleep(1)
-                
+
                 for rdap in answer:
                     cname_record = str(rdap.target).rstrip(".")  # Remove the trailing dot.
-            except dns.resolver.NXDOMAIN: # NXDOMAIN stands for Non-Existent Domain.
+
+            except dns.resolver.NXDOMAIN:
+                # NXDOMAIN stands for Non-Existent Domain.
                 break
-            except dns.resolver.NoAnswer: # The domain does exist, but the specific DNS record type you're asking for is missing.
+
+            except dns.resolver.NoAnswer:
+                # The domain does exist, but the specific DNS record type you're asking for is missing.
                 break
-            
+
+            except dns.resolver.LifetimeTimeout:
+                # The resolution lifetime expired.
+                continue
+
             f.dns_chain.append(cname_record)
-            
+
         ############################################################
         # For the last link in the DNS chain, check its A records. #
         ############################################################
-        try:
-            answer = dns.resolver.resolve_at(random.choice(DNS_SERVERS), f.dns_chain[-1], "A")
-            time.sleep(1)
-            
-            resolved_ips = []
-            for rdap in answer:
-                resolved_ips.append(str(rdap.address))
-                
-            f.hosts_found = True
+        while True:
+            try:
+                answer = dns.resolver.resolve_at(random.choice(DNS_SERVERS), f.dns_chain[-1], "A")
+                time.sleep(1)
 
-            for ip in resolved_ips:
-                ip_obj = self._populate_ipv4(ip)
-                f.destination_ips.append(ip_obj)
-        except dns.resolver.NoAnswer:
-            pass
-        except dns.resolver.NXDOMAIN:
-            pass
-        
+                resolved_ips = []
+                for rdap in answer:
+                    resolved_ips.append(str(rdap.address))
+
+                f.hosts_found = True
+
+                for ip in resolved_ips:
+                    ip_obj = self._populate_ipv4(ip)
+                    f.destination_ips.append(ip_obj)
+
+                break
+
+            except dns.resolver.NXDOMAIN:
+                # NXDOMAIN stands for Non-Existent Domain.
+                break
+
+            except dns.resolver.NoAnswer:
+                # The domain does exist, but the specific DNS record type you're asking for is missing.
+                break
+
+            except dns.resolver.LifetimeTimeout:
+                # The resolution lifetime expired.
+                continue
+
         return f
 
     def _populate_url(self, url: str) -> models.URL:
 
         parsed_url = urllib.parse.urlparse(url)
         parsed_port = parsed_url.port if parsed_url.port is not None else 443 if parsed_url.scheme == "https" else 80
-        
+
         u = models.URL(
             url=url,
             scheme=parsed_url.scheme,
@@ -277,7 +292,7 @@ class Analyzer(pydantic.BaseModel):
             port=parsed_port,
             path=parsed_url.path,
         )
-        
+
         u.fqdn = self._populate_fqdn(parsed_url.hostname)
 
         ########
@@ -288,8 +303,9 @@ class Analyzer(pydantic.BaseModel):
             u.reachable = True
         except requests.exceptions.RequestException:
             u.reachable = False
-        
+
         return u
+
 
 DNS_SERVERS = [
     # Google
