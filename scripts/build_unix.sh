@@ -3,9 +3,6 @@ nuitka --standalone --onefile --follow-imports --lto=yes --assume-yes-for-downlo
 mv ./main.bin ./scopez
 tar -cvf scopez.tar ./scopez
 7z a -tgzip -mx=9 scopez.tar.gz scopez.tar
-mv scopez.tar.gz scopez-macos-arm64.tar.gz
+mv scopez.tar.gz scopez-linux-amd64.tar.gz
 rm -rf main.build
 rm -rf main.dist
-rm -rf main.onefile-build
-rm scopez.tar
-rm scopez
