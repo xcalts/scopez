@@ -46,7 +46,7 @@ class Targeter(pydantic.BaseModel):
                     self.ipv6s_with_port.append(val)
                 elif self._validate_fqdn(val):
                     self.fqdns.append(val)
-                elif self.validate_fqdn_with_port(val):
+                elif self._validate_fqdn_with_port(val):
                     self.fqdns_with_port.append(val)
                 elif self._validate_cidr_ipv4(val):
                     self.cidrs_v4.append(val)
@@ -77,7 +77,7 @@ class Targeter(pydantic.BaseModel):
                 self.ipv6s_with_port.append(val)
             elif self._validate_fqdn(val):
                 self.fqdns.append(val)
-            elif self.validate_fqdn_with_port(val):
+            elif self._validate_fqdn_with_port(val):
                 self.fqdns_with_port.append(val)
             elif self._validate_cidr_ipv4(val):
                 self.cidrs_v4.append(val)
@@ -105,7 +105,7 @@ class Targeter(pydantic.BaseModel):
                     self._remove_from_list(self.ipv6s_with_port, val)
                 elif self._validate_fqdn(val):
                     self._remove_from_list(self.fqdns, val)
-                elif self.validate_fqdn_with_port(val):
+                elif self._validate_fqdn_with_port(val):
                     self._remove_from_list(self.fqdns_with_port, val)
                 elif self._validate_cidr_ipv4(val):
                     self._remove_from_list(self.cidrs_v4, val)
@@ -127,7 +127,7 @@ class Targeter(pydantic.BaseModel):
                 self._remove_from_list(self.ipv6s_with_port, val)
             elif self._validate_fqdn(val):
                 self._remove_from_list(self.fqdns, val)
-            elif self.validate_fqdn_with_port(val):
+            elif self._validate_fqdn_with_port(val):
                 self._remove_from_list(self.fqdns_with_port, val)
             elif self._validate_cidr_ipv4(val):
                 self._remove_from_list(self.cidrs_v4, val)
@@ -288,7 +288,7 @@ class Targeter(pydantic.BaseModel):
     def _validate_fqdn(self, value: str) -> bool:
         return fqdn.FQDN(value).is_valid
 
-    def validate_fqdn_with_port(self, value: str) -> bool:
+    def _validate_fqdn_with_port(self, value: str) -> bool:
         if ":" not in value:
             return False
 
