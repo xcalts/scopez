@@ -66,7 +66,7 @@ class Analyzer(pydantic.BaseModel):
             no_threads(int): The number of worker threads to run in-parallel.
         """
         with concurrent.futures.ThreadPoolExecutor(max_workers=no_threads) as executor:
-            futures = [executor.submit(self._process_cidr, cidr) for cidr in cidrs]
+            futures = [executor.submit(self._populate_cidr, cidr) for cidr in cidrs]
 
             for future in concurrent.futures.as_completed(futures):
                 cidr_obj = future.result()
@@ -121,8 +121,14 @@ class Analyzer(pydantic.BaseModel):
         # RDAP #
         ########
         if ipv4_obj.visibility == "Public":
-            whois = ipwhois.IPWhois(ipv4_obj.ipv4)
-            rdap = whois.lookup_rdap(depth=1) or {}
+            while True:
+                try:
+                    whois = ipwhois.IPWhois(ipv4_obj.ipv4)
+                    rdap = whois.lookup_rdap(depth=1) or {}
+                    break
+                except Exception:
+                    time.sleep(5)
+                    continue
             ipv4_obj.asn_network = rdap.get("network", {}).get("name", "").replace(",", "")
             ipv4_obj.asn_country_code = rdap.get("asn_country_code")
             ipv4_obj.asn_description = rdap.get("asn_description", "").replace(",", "")
@@ -178,8 +184,14 @@ class Analyzer(pydantic.BaseModel):
         ########
         if cidr_obj.visibility == "Public":
             ip = cidr.split("/")[0]
-            whois = ipwhois.IPWhois(ip)
-            rdap = whois.lookup_rdap(depth=1) or {}
+            while True:
+                try:
+                    whois = ipwhois.IPWhois(ip)
+                    rdap = whois.lookup_rdap(depth=1) or {}
+                    break
+                except Exception:
+                    time.sleep(5)
+                    continue
             cidr_obj.asn_network = rdap.get("network", {}).get("name", "").replace(",", "")
             cidr_obj.asn_country_code = rdap.get("asn_country_code")
             cidr_obj.asn_description = rdap.get("asn_description", "").replace(",", "")
@@ -243,6 +255,10 @@ class Analyzer(pydantic.BaseModel):
                 # The resolution lifetime expired.
                 continue
 
+            except dns.resolver.NoNameservers:
+                # If no non-broken nameservers are available to answer the question.
+                continue
+
             f.dns_chain.append(cname_record)
 
         ############################################################
@@ -275,6 +291,10 @@ class Analyzer(pydantic.BaseModel):
 
             except dns.resolver.LifetimeTimeout:
                 # The resolution lifetime expired.
+                continue
+
+            except dns.resolver.NoNameservers:
+                # If no non-broken nameservers are available to answer the question.
                 continue
 
         return f
