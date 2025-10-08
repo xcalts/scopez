@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+
 #
 # Bump project version in all relevant files, commit & tag the release, and push to remote.
 #

@@ -11,7 +11,7 @@ name = "scopez"
 version = "v0.0.8"
 description = "Scopez verifies connectivity to target servers, reveals CDN presence, and provides detailed target insights like reachability and RDAP."
 readme = "README.md"
-requires-python = ">3.12.5"
+requires-python = ">3.11"
 license = { file = "LICENSE" }
 authors = [{ name = "Christos Kaltsas", email = "christos@xcalts.co" }]
 maintainers = [{ name = "Christos Kaltsas", email = "christos@xcalts.co" }]
