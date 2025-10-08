@@ -57,10 +57,10 @@
 
 ## Installation
 
-You can install `scopez` using `pip`.
+You can install `scopez` using `uv`.
 
 ```
-pip install scopez
+uv tool install scopez
 ```
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
