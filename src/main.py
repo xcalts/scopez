@@ -19,8 +19,8 @@ import utils
 import print
 
 
-warnings.simplefilter("ignore", urllib3.exceptions.InsecureRequestWarning)
-CONTEXT_SETTINGS = dict(max_content_width=120, help_option_names=["-help"])
+warnings.simplefilter('ignore', urllib3.exceptions.InsecureRequestWarning)
+CONTEXT_SETTINGS = dict(max_content_width=120, help_option_names=['-help'])
 
 
 def ctrl_c_signal_handler(sig: int, frame: types.FrameType | None) -> None:
@@ -40,86 +40,86 @@ def ctrl_c_signal_handler(sig: int, frame: types.FrameType | None) -> None:
 )
 @click.version_option(
     __version__,
-    "-version",
+    '-version',
     cls=utils.CustomOption,
-    category="DEBUG",
+    category='DEBUG',
 )
 @click.option(
-    "-no-color",
-    help="Disable colors in CLI output.",
+    '-no-color',
+    help='Disable colors in CLI output.',
     is_flag=True,
     cls=utils.CustomOption,
-    category="DEBUG",
+    category='DEBUG',
 )
 @click.option(
-    "-silent",
-    help="Display only results in output.",
+    '-silent',
+    help='Display only results in output.',
     is_flag=True,
     cls=utils.CustomOption,
-    category="DEBUG",
+    category='DEBUG',
 )
 @click.option(
-    "-simulate",
-    help="Display the parsed targets.",
+    '-simulate',
+    help='Display the parsed targets.',
     is_flag=True,
     cls=utils.CustomOption,
-    category="DEBUG",
+    category='DEBUG',
 )
 @click.option(
-    "-target",
-    help="Targets to analyze (comma-separated).",
+    '-target',
+    help='Targets to analyze (comma-separated).',
     type=str,
-    default="",
+    default='',
     cls=utils.CustomOption,
-    category="INPUT",
+    category='INPUT',
 )
 @click.option(
-    "-list",
-    help="List of targets to analyze (file).",
+    '-list',
+    help='List of targets to analyze (file).',
     type=str,
-    default="",
+    default='',
     callback=validation.validate_file_exists,
     cls=utils.CustomOption,
-    category="INPUT",
+    category='INPUT',
 )
 @click.option(
-    "-exclude-targets",
-    help="Targets to exclude from analysis (comma-separated).",
+    '-exclude-targets',
+    help='Targets to exclude from analysis (comma-separated).',
     type=str,
-    default="",
+    default='',
     cls=utils.CustomOption,
-    category="INPUT",
+    category='INPUT',
 )
 @click.option(
-    "-exclude-file",
-    help="List of targets to exclude from analysis (file).",
+    '-exclude-file',
+    help='List of targets to exclude from analysis (file).',
     type=str,
-    default="",
+    default='',
     callback=validation.validate_file_exists,
     cls=utils.CustomOption,
-    category="INPUT",
+    category='INPUT',
 )
 @click.option(
-    "-json",
-    help="Write output in JSON lines format.",
+    '-json',
+    help='Write output in JSON lines format.',
     is_flag=True,
     cls=utils.CustomOption,
-    category="OUTPUT",
+    category='OUTPUT',
 )
 @click.option(
-    "-table",
-    help="Write output in Table format.",
+    '-table',
+    help='Write output in Table format.',
     is_flag=True,
     cls=utils.CustomOption,
-    category="OUTPUT",
+    category='OUTPUT',
 )
 @click.option(
-    "-threads",
-    help="The max number of worker threads.",
+    '-threads',
+    help='The max number of worker threads.',
     type=int,
     default=10,
     cls=utils.CustomOption,
-    category="TWEAK",
+    category='TWEAK',
 )
 def cli(
     no_color: bool,
@@ -133,7 +133,6 @@ def cli(
     table: bool,
     threads: int,
 ) -> None:
-    
     ##########
     # Global #
     ##########
@@ -141,7 +140,7 @@ def cli(
     verbose.HIGHLIGHT = False
     verbose.SOFT_WRAP = True
     verbose.CONSOLE = rich.console.Console(no_color=no_color)
-    
+
     #########################
     # Windows not Supported #
     #########################
@@ -158,59 +157,59 @@ def cli(
     ##################
     if json and table:
         raise click.UsageError("You can not use '-json' and '-table' options at the same time.")
-    
+
     ###########
     # Welcome #
     ###########
     verbose.print_banner(silent)
-    verbose.warning("Use with caution. You are responsible for your actions.")
-    
+    verbose.warning('Use with caution. You are responsible for your actions.')
+
     ##########
     # GeoIP2 #
     ##########
     verbose.info("Make sure 'geoip2-ipv4.csv' is downloaded.")
-    GEOIP_SHA256 = "4d5b63c8a4dc7d78d395de2106f1ff1a38a654da67cdecde80ba7fe55db4cc7a"
+    GEOIP_SHA256 = '4d5b63c8a4dc7d78d395de2106f1ff1a38a654da67cdecde80ba7fe55db4cc7a'
     exe_location = os.path.dirname(os.path.abspath(__file__))
-    geoip_filepath = os.path.join(exe_location, "geoip2-ipv4.csv")
+    geoip_filepath = os.path.join(exe_location, 'geoip2-ipv4.csv')
     if not validation._file_exists(geoip_filepath) or not validation._verify_sha256(geoip_filepath, GEOIP_SHA256):
-        verbose.info("Download the geoip database from GitHub.")
-        GEOIP_URL = "https://raw.githubusercontent.com/datasets/geoip2-ipv4/refs/heads/main/data/geoip2-ipv4.csv"
+        verbose.info('Download the geoip database from GitHub.')
+        GEOIP_URL = 'https://raw.githubusercontent.com/datasets/geoip2-ipv4/refs/heads/main/data/geoip2-ipv4.csv'
         response = requests.get(GEOIP_URL, verify=False, timeout=3600)
         response.raise_for_status()
-        with open(geoip_filepath, "wb") as f:
+        with open(geoip_filepath, 'wb') as f:
             f.write(response.content)
 
     #########
     # Input #
     #########
     targeter = targets.Targeter()
-    if not sys.stdin.isatty():
-        verbose.info("Parse targets from the STDIN.")
-        targeter.parse_targets_file("-")
-    elif target != "":
+    if target != '':
         verbose.info("Parse targets from the 'target' CLI parameter.")
         targeter.parse_targets_str(target)
-    elif list != "":
+    elif list != '':
         verbose.info(f"Parse targets from the file located at '{list}'.")
         targeter.parse_targets_file(list)
-    elif exclude_targets != "":
+    elif exclude_targets != '':
         verbose.info("Exclude targets from the 'exclude_targets' CLI parameter.")
         targeter.parse_exclusions_str(exclude_targets)
-    elif exclude_file != "":
+    elif exclude_file != '':
         verbose.info(f"Exclude targets from the file located at '{exclude_file}'.")
         targeter.parse_exclusions_file(exclude_file)
+    elif not sys.stdin.isatty():
+        verbose.info('Parse targets from the STDIN.')
+        targeter.parse_targets_file('-')
 
     ##############
     # No Targets #
     ##############
     if targeter.total_count() == 0:
-        raise click.UsageError("You must supply at least one target.")
+        raise click.UsageError('You must supply at least one target.')
 
     ##############
     # Simulation #
     ##############
     if simulate:
-        verbose.info("Simulate and print the parsed targets.")
+        verbose.info('Simulate and print the parsed targets.')
         targeter.print_targets()
         exit(1)
 
@@ -219,7 +218,7 @@ def cli(
     ############
     analyzer = analysis.Analyzer()
     analyzer.parse_geoip_data(geoip_filepath)
-    verbose.info("Analyze the targets.")
+    verbose.info('Analyze the targets.')
     if len(targeter.ipv4s) > 0:
         analyzer.analyze_ipv4s(targeter.ipv4s, threads)
     if len(targeter.cidrs_v4) > 0:
@@ -232,7 +231,7 @@ def cli(
     ##########
     # stdout #
     ##########
-    verbose.info("Print the results in the stdout.")
+    verbose.info('Print the results in the stdout.')
     verbose.SILENT = False
     if len(targeter.ipv4s) > 0:
         if table:
@@ -266,8 +265,8 @@ def cli(
     ############
     # Beautify #
     ############
-    verbose.normal("\n")
+    verbose.normal('\n')
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     cli()
