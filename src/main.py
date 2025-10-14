@@ -59,6 +59,13 @@ def ctrl_c_signal_handler(sig: int, frame: types.FrameType | None) -> None:
     category='DEBUG',
 )
 @click.option(
+    '-debug',
+    help='Display debug messages.',
+    is_flag=True,
+    cls=utils.CustomOption,
+    category='DEBUG',
+)
+@click.option(
     '-simulate',
     help='Display the parsed targets.',
     is_flag=True,
@@ -124,6 +131,7 @@ def ctrl_c_signal_handler(sig: int, frame: types.FrameType | None) -> None:
 def cli(
     no_color: bool,
     silent: bool,
+    debug: bool,
     simulate: bool,
     target: str,
     list: str,
@@ -139,6 +147,7 @@ def cli(
     verbose.SILENT = silent
     verbose.HIGHLIGHT = False
     verbose.SOFT_WRAP = True
+    verbose.DEBUG = debug
     verbose.CONSOLE = rich.console.Console(no_color=no_color)
 
     #########################

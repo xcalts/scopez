@@ -27,19 +27,19 @@ class Analyzer(pydantic.BaseModel):
 
     def parse_geoip_data(self, geoip_csv_database_filepath: str):
         data_frame = pandas.read_csv(geoip_csv_database_filepath).where(pandas.notnull, None)
-        records = data_frame.to_dict(orient="records")
+        records = data_frame.to_dict(orient='records')
 
         for r in records:
             self.geoip_records.append(
                 models.GeoIPRecord(
-                    network=r.get("network"),
-                    geoname_id=r.get("geoname_id"),
-                    continent_code=r.get("continent_code"),
-                    continent_name=r.get("continent_name"),
-                    country_iso_code=r.get("country_iso_code"),
-                    country_name=r.get("country_name"),
-                    is_anonymous_proxy=r.get("is_anonymous_proxy"),
-                    is_satellite_provider=r.get("is_satellite_provider"),
+                    network=r.get('network'),
+                    geoname_id=r.get('geoname_id'),
+                    continent_code=r.get('continent_code'),
+                    continent_name=r.get('continent_name'),
+                    country_iso_code=r.get('country_iso_code'),
+                    country_name=r.get('country_name'),
+                    is_anonymous_proxy=r.get('is_anonymous_proxy'),
+                    is_satellite_provider=r.get('is_satellite_provider'),
                 )
             )
 
@@ -50,6 +50,8 @@ class Analyzer(pydantic.BaseModel):
             ipv4s (list[str]): A list of IP addresses in raw format.
             no_threads(int): The number of worker threads to run in-parallel.
         """
+        verbose.debug('Analyze IPV4s.')
+
         with concurrent.futures.ThreadPoolExecutor(max_workers=no_threads) as executor:
             futures = [executor.submit(self._populate_ipv4, ip) for ip in ipv4s]
 
@@ -65,6 +67,8 @@ class Analyzer(pydantic.BaseModel):
             cidrs (list[str]): A list of CIDR IP addresses in raw format.
             no_threads(int): The number of worker threads to run in-parallel.
         """
+        verbose.debug('Analyze CIDRs.')
+
         with concurrent.futures.ThreadPoolExecutor(max_workers=no_threads) as executor:
             futures = [executor.submit(self._populate_cidr, cidr) for cidr in cidrs]
 
@@ -80,6 +84,8 @@ class Analyzer(pydantic.BaseModel):
             fqdns (list[str]): A list of FQDNs in raw format.
             no_threads(int): The number of worker threads to run in-parallel.
         """
+        verbose.debug('Analyze FQDNs.')
+
         with concurrent.futures.ThreadPoolExecutor(max_workers=no_threads) as executor:
             futures = [executor.submit(self._populate_fqdn, fqdn) for fqdn in fqdns]
 
@@ -95,6 +101,8 @@ class Analyzer(pydantic.BaseModel):
             urls (list[str]): A list of URLs in raw format.
             no_threads(int): The number of worker threads to run in-parallel.
         """
+        verbose.debug('Analyze URLs.')
+
         with concurrent.futures.ThreadPoolExecutor(max_workers=no_threads) as executor:
             futures = [executor.submit(self._populate_url, url) for url in urls]
 
@@ -104,6 +112,8 @@ class Analyzer(pydantic.BaseModel):
                 self.analyzed_urls.append(url_obj)
 
     def _populate_ipv4(self, ipv4: str) -> models.IPV4:
+        verbose.debug(f'Analyze {ipv4}.')
+
         ipv4_obj = models.IPV4()
         ipv4_obj.ipv4 = ipv4
 
@@ -115,12 +125,12 @@ class Analyzer(pydantic.BaseModel):
         ##############
         # Visibility #
         ##############
-        ipv4_obj.visibility = "Private" if ip.is_private else "Public"
+        ipv4_obj.visibility = 'Private' if ip.is_private else 'Public'
 
         ########
         # RDAP #
         ########
-        if ipv4_obj.visibility == "Public":
+        if ipv4_obj.visibility == 'Public':
             while True:
                 try:
                     whois = ipwhois.IPWhois(ipv4_obj.ipv4)
@@ -129,18 +139,18 @@ class Analyzer(pydantic.BaseModel):
                 except Exception:
                     time.sleep(5)
                     continue
-            ipv4_obj.asn_network = rdap.get("network", {}).get("name", "").replace(",", "")
-            ipv4_obj.asn_country_code = rdap.get("asn_country_code")
-            ipv4_obj.asn_description = rdap.get("asn_description", "").replace(",", "")
+            ipv4_obj.asn_network = rdap.get('network', {}).get('name', '').replace(',', '')
+            ipv4_obj.asn_country_code = rdap.get('asn_country_code')
+            ipv4_obj.asn_description = rdap.get('asn_description', '').replace(',', '')
         else:
-            ipv4_obj.asn_network = "N/A"
-            ipv4_obj.asn_country_code = "N/A"
-            ipv4_obj.asn_description = "N/A"
+            ipv4_obj.asn_network = 'N/A'
+            ipv4_obj.asn_country_code = 'N/A'
+            ipv4_obj.asn_description = 'N/A'
 
         #########
         # GeoIP #
         #########
-        if ipv4_obj.visibility == "Public":
+        if ipv4_obj.visibility == 'Public':
             for r in self.geoip_records:
                 network = ipaddress.IPv4Network(r.network)
 
@@ -148,15 +158,15 @@ class Analyzer(pydantic.BaseModel):
                     ipv4_obj.geoip_continent = r.continent_name
                     ipv4_obj.geoip_country = r.country_name
         else:
-            ipv4_obj.geoip_continent = "N/A"
-            ipv4_obj.geoip_country = "N/A"
+            ipv4_obj.geoip_continent = 'N/A'
+            ipv4_obj.geoip_country = 'N/A'
 
         ########
         # Ping #
         ########
-        if ipv4_obj.visibility == "Public":
-            param = "-n" if os.sys.platform.lower() == "win32" else "-c"
-            command = ["ping", param, "1", "-i", "0.2", ipv4]
+        if ipv4_obj.visibility == 'Public':
+            param = '-n' if os.sys.platform.lower() == 'win32' else '-c'
+            command = ['ping', param, '1', '-i', '0.2', ipv4]
             pingable = subprocess.call(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL) == 0
             ipv4_obj.pingable = pingable
         else:
@@ -165,6 +175,8 @@ class Analyzer(pydantic.BaseModel):
         return ipv4_obj
 
     def _populate_cidr(self, cidr: str) -> models.CIDR:
+        verbose.debug(f'Analyze {cidr}.')
+
         cidr_obj = models.CIDR()
         cidr_obj.cidr = cidr
 
@@ -177,13 +189,13 @@ class Analyzer(pydantic.BaseModel):
         ##############
         # Visibility #
         ##############
-        cidr_obj.visibility = "Private" if network.is_private else "Public"
+        cidr_obj.visibility = 'Private' if network.is_private else 'Public'
 
         ########
         # RDAP #
         ########
-        if cidr_obj.visibility == "Public":
-            ip = cidr.split("/")[0]
+        if cidr_obj.visibility == 'Public':
+            ip = cidr.split('/')[0]
             while True:
                 try:
                     whois = ipwhois.IPWhois(ip)
@@ -192,29 +204,31 @@ class Analyzer(pydantic.BaseModel):
                 except Exception:
                     time.sleep(5)
                     continue
-            cidr_obj.asn_network = rdap.get("network", {}).get("name", "").replace(",", "")
-            cidr_obj.asn_country_code = rdap.get("asn_country_code")
-            cidr_obj.asn_description = rdap.get("asn_description", "").replace(",", "")
+            cidr_obj.asn_network = rdap.get('network', {}).get('name', '').replace(',', '')
+            cidr_obj.asn_country_code = rdap.get('asn_country_code')
+            cidr_obj.asn_description = rdap.get('asn_description', '').replace(',', '')
         else:
-            cidr_obj.asn_network = "N/A"
-            cidr_obj.asn_country_code = "N/A"
-            cidr_obj.asn_description = "N/A"
+            cidr_obj.asn_network = 'N/A'
+            cidr_obj.asn_country_code = 'N/A'
+            cidr_obj.asn_description = 'N/A'
 
         #########
         # GeoIP #
         #########
-        if cidr_obj.visibility == "Public":
+        if cidr_obj.visibility == 'Public':
             for r in self.geoip_records:
                 if cidr_obj.asn_network == r.network:
                     cidr_obj.geoip_continent = r.continent_name
                     cidr_obj.geoip_country = r.country_name
         else:
-            cidr_obj.geoip_continent = "N/A"
-            cidr_obj.geoip_country = "N/A"
+            cidr_obj.geoip_continent = 'N/A'
+            cidr_obj.geoip_country = 'N/A'
 
         return cidr_obj
 
     def _populate_fqdn(self, fqdn: str) -> models.FQDN:
+        verbose.debug(f'Analyze {fqdn}.')
+
         ######################################################################################
         # Process                                                                            #
         # ---                                                                                #
@@ -235,13 +249,13 @@ class Analyzer(pydantic.BaseModel):
         # Discover the CNAME Chain. #
         #############################
         while True:
-            cname_record = ""
+            cname_record = ''
             try:
-                answer = dns.resolver.resolve_at(random.choice(DNS_SERVERS), f.dns_chain[-1], "CNAME")
+                answer = dns.resolver.resolve_at(random.choice(DNS_SERVERS), f.dns_chain[-1], 'CNAME')
                 time.sleep(1)
 
                 for rdap in answer:
-                    cname_record = str(rdap.target).rstrip(".")  # Remove the trailing dot.
+                    cname_record = str(rdap.target).rstrip('.')  # Remove the trailing dot.
 
             except dns.resolver.NXDOMAIN:
                 # NXDOMAIN stands for Non-Existent Domain.
@@ -253,10 +267,12 @@ class Analyzer(pydantic.BaseModel):
 
             except dns.resolver.LifetimeTimeout:
                 # The resolution lifetime expired.
+                verbose.debug('dns.resolver.LifetimeTimeout')
                 continue
 
             except dns.resolver.NoNameservers:
                 # If no non-broken nameservers are available to answer the question.
+                verbose.debug('dns.resolver.NoNameservers')
                 continue
 
             f.dns_chain.append(cname_record)
@@ -266,7 +282,7 @@ class Analyzer(pydantic.BaseModel):
         ############################################################
         while True:
             try:
-                answer = dns.resolver.resolve_at(random.choice(DNS_SERVERS), f.dns_chain[-1], "A")
+                answer = dns.resolver.resolve_at(random.choice(DNS_SERVERS), f.dns_chain[-1], 'A')
                 time.sleep(1)
 
                 resolved_ips = []
@@ -291,24 +307,27 @@ class Analyzer(pydantic.BaseModel):
 
             except dns.resolver.LifetimeTimeout:
                 # The resolution lifetime expired.
+                verbose.debug('dns.resolver.LifetimeTimeout')
                 continue
 
             except dns.resolver.NoNameservers:
                 # If no non-broken nameservers are available to answer the question.
+                verbose.debug('dns.resolver.NoNameservers')
                 continue
 
         return f
 
     def _populate_url(self, url: str) -> models.URL:
+        verbose.debug(f'Analyze {url}.')
 
         parsed_url = urllib.parse.urlparse(url)
-        parsed_port = parsed_url.port if parsed_url.port is not None else 443 if parsed_url.scheme == "https" else 80
+        parsed_port = parsed_url.port if parsed_url.port is not None else 443 if parsed_url.scheme == 'https' else 80
 
         u = models.URL(
             url=url,
             scheme=parsed_url.scheme,
-            username=parsed_url.username if parsed_url.username is not None else "",
-            password=parsed_url.password if parsed_url.password is not None else "",
+            username=parsed_url.username if parsed_url.username is not None else '',
+            password=parsed_url.password if parsed_url.password is not None else '',
             port=parsed_port,
             path=parsed_url.path,
         )
@@ -329,43 +348,43 @@ class Analyzer(pydantic.BaseModel):
 
 DNS_SERVERS = [
     # Google
-    "8.8.8.8",
+    '8.8.8.8',
     # Google
-    "8.8.4.4",
+    '8.8.4.4',
     # Control D
-    "76.76.2.0",
+    '76.76.2.0',
     # Control D
-    "76.76.10.0",
+    '76.76.10.0',
     # Quad9
-    "9.9.9.9",
+    '9.9.9.9',
     # Quad9
-    "149.112.112.112",
+    '149.112.112.112',
     # OpenDNS Home
-    "208.67.222.222",
+    '208.67.222.222',
     # OpenDNS Home
-    "208.67.220.220",
+    '208.67.220.220',
     # Cloudflare
-    "1.1.1.1",
+    '1.1.1.1',
     # Cloudflare
-    "1.0.0.1",
+    '1.0.0.1',
     # AdGuard DNS
-    "94.140.14.14",
+    '94.140.14.14',
     # AdGuard DNS
-    "94.140.15.15",
+    '94.140.15.15',
     # CleanBrowsing
-    "185.228.168.9",
+    '185.228.168.9',
     # CleanBrowsing
-    "185.228.169.9",
+    '185.228.169.9',
     # Oracle
-    "216.146.35.35",
+    '216.146.35.35',
     # Oracle
-    "216.146.36.36",
+    '216.146.36.36',
     # Quad101
-    "101.101.101.101",
+    '101.101.101.101',
     # Quad101
-    "101.102.103.104",
+    '101.102.103.104',
     # Nippon Telegraph and Telephone
-    "129.250.35.250",
+    '129.250.35.250',
     # Nippon Telegraph and Telephone
-    "129.250.35.251",
+    '129.250.35.251',
 ]
