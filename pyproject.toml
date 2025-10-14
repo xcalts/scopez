@@ -36,11 +36,11 @@ dependencies = [
 
 # --- URLs ---
 [project.urls]
-"Homepage" = "https://github.com/xcalts/bugshunter"
-"Source" = "https://github.com/xcalts/bugshunter"
-"Documentation" = "https://github.com/xcalts/bugshunter"
-"Bug Reports" = "https://github.com/xcalts/bugshunter/issues"
-"Changelog" = "https://github.com/xcalts/bugshunter/releases"
+"Homepage" = "https://github.com/xcalts/scopez"
+"Source" = "https://github.com/xcalts/scopez"
+"Documentation" = "https://github.com/xcalts/scopez"
+"Bug Reports" = "https://github.com/xcalts/scopez/issues"
+"Changelog" = "https://github.com/xcalts/scopez/releases"
 
 # --- Scripts ---
 [project.scripts]
