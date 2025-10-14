@@ -209,3 +209,22 @@ class Printer:
                 verbose.normal(
                     f'[white]{url.type}[/white],[green]{url.url}[/green],[yellow]{" > ".join(url.fqdn.dns_chain) + " > Not Found"}[/yellow],[red]N/A[/red],[red]N/A[/red],[red]N/A[/red],[red]N/A[/red],[red]N/A[/red],[blue]N/A[/blue],[blue]N/A[/blue]',
                 )
+
+    ############
+    # Invalids #
+    ############
+    @staticmethod
+    def print_invalids_as_table(invalids: list[str]) -> None:
+        t = rich.table.Table(box=rich.box.ASCII)
+
+        t.add_column('Invalid')
+
+        for invalid in invalids:
+            t.add_row(invalid)
+
+        verbose.normal(t)
+
+    @staticmethod
+    def print_invalids_as_raw(invalids: list[str]) -> None:
+        for invalid in invalids:
+            verbose.normal(f'[white]invalid[/white],[red]{invalid}[/red]')
