@@ -272,9 +272,9 @@ def cli(
             print.Printer.print_urls_as_table(analyzer.analyzed_urls)
     if len(targeter.invalids) > 0:
         if table:
-            print.Printer.print_invalids_as_table(analyzer.analyzed_urls)
+            print.Printer.print_invalids_as_table(targeter.invalids)
         else:
-            print.Printer.print_invalids_as_table(analyzer.analyzed_urls)
+            print.Printer.print_invalids_as_table(targeter.invalids)
 
     ############
     # Beautify #
