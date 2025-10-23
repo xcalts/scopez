@@ -1,12 +1,11 @@
 import click
 
 
-
 class CustomOption(click.Option):
     """This wrapper class helps the `click` library to categorize the CLI options."""
 
     def __init__(self, *args, **kwargs):
-        self.category = kwargs.pop("category", None)
+        self.category = kwargs.pop('category', None)
         super().__init__(*args, **kwargs)
 
 
@@ -37,9 +36,9 @@ class CustomCommand(click.Command):
 
         for param in self.get_params(ctx):
             if isinstance(param, click.Option):
-                cat = getattr(param, "category", "OTHER")
+                cat = getattr(param, 'category', 'OTHER')
                 categories.setdefault(cat, []).append(param)
 
         for category, params in categories.items():
             with formatter.section(category):
-                formatter.write_dl([(p.opts[0], p.help or "") for p in params])
+                formatter.write_dl([(p.opts[0], p.help or '') for p in params])

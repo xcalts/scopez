@@ -31,7 +31,7 @@ class Targeter(pydantic.BaseModel):
             targets_filepath (str): Path to file or "-" to read from stdin.
 
         """
-        file = sys.stdin if targets_filepath == "-" else open(targets_filepath)
+        file = sys.stdin if targets_filepath == '-' else open(targets_filepath)
 
         with file as f:
             for line in f:
@@ -66,7 +66,7 @@ class Targeter(pydantic.BaseModel):
             targets_str (str): The text that contains the targets separted by a newline.
 
         """
-        for val in targets_str.split(","):
+        for val in targets_str.split(','):
             if self._validate_ipv4(val):
                 self.ipv4s.append(val)
             elif self._validate_ipv4_with_port(val):
@@ -115,7 +115,7 @@ class Targeter(pydantic.BaseModel):
                     self._remove_from_list(self.invalids, val)
 
     def parse_exclusions_str(self, exclusion_str: str) -> None:
-        for val in exclusion_str.split(","):
+        for val in exclusion_str.split(','):
             val = val.strip()
             if self._validate_ipv4(val):
                 self._remove_from_list(self.ipv4s, val)
@@ -154,54 +154,54 @@ class Targeter(pydantic.BaseModel):
         console = verbose.CONSOLE
 
         if len(self.ipv4s) > 0:
-            console.print(rich.panel.Panel.fit("IP Addresses (v4)"))
+            console.print(rich.panel.Panel.fit('IP Addresses (v4)'))
             for i in self.ipv4s:
-                console.print(f" - {i}", highlight=False)
+                console.print(f' - {i}', highlight=False)
 
         if len(self.ipv4s_with_port) > 0:
-            console.print(rich.panel.Panel.fit("IP Addresses with Port (v4)"))
+            console.print(rich.panel.Panel.fit('IP Addresses with Port (v4)'))
             for i in self.ipv4s_with_port:
-                console.print(f" - {i}", highlight=False)
+                console.print(f' - {i}', highlight=False)
 
         if len(self.ipv6s) > 0:
-            console.print(rich.panel.Panel.fit("IP Addresses (v6)"))
+            console.print(rich.panel.Panel.fit('IP Addresses (v6)'))
             for i in self.ipv6s:
-                console.print(f" - {i}", highlight=False)
+                console.print(f' - {i}', highlight=False)
 
         if len(self.ipv6s_with_port) > 0:
-            console.print(rich.panel.Panel.fit("IP Addresses with Port (v6)"))
+            console.print(rich.panel.Panel.fit('IP Addresses with Port (v6)'))
             for i in self.ipv6s_with_port:
-                console.print(f" - {i}", highlight=False)
+                console.print(f' - {i}', highlight=False)
 
         if len(self.fqdns) > 0:
-            console.print(rich.panel.Panel.fit("FQDNs"))
+            console.print(rich.panel.Panel.fit('FQDNs'))
             for f in self.fqdns:
-                console.print(f" - {f}", highlight=False)
+                console.print(f' - {f}', highlight=False)
 
         if len(self.fqdns_with_port) > 0:
-            console.print(rich.panel.Panel.fit("FQDNs with Port"))
+            console.print(rich.panel.Panel.fit('FQDNs with Port'))
             for f in self.fqdns_with_port:
-                console.print(f" - {f}", highlight=False)
+                console.print(f' - {f}', highlight=False)
 
         if len(self.cidrs_v4) > 0:
-            console.print(rich.panel.Panel.fit("CIDRs (v4)"))
+            console.print(rich.panel.Panel.fit('CIDRs (v4)'))
             for c in self.cidrs_v4:
-                console.print(f" - {c}", highlight=False)
+                console.print(f' - {c}', highlight=False)
 
         if len(self.cidrs_v6) > 0:
-            console.print(rich.panel.Panel.fit("CIDRs (v6)"))
+            console.print(rich.panel.Panel.fit('CIDRs (v6)'))
             for c in self.cidrs_v6:
-                console.print(f" - {c}", highlight=False)
+                console.print(f' - {c}', highlight=False)
 
         if len(self.urls) > 0:
-            console.print(rich.panel.Panel.fit("URLs"))
+            console.print(rich.panel.Panel.fit('URLs'))
             for u in self.urls:
-                console.print(f" - {u}", highlight=False)
+                console.print(f' - {u}', highlight=False)
 
         if len(self.invalids) > 0:
-            console.print(rich.panel.Panel.fit("Invalids"))
+            console.print(rich.panel.Panel.fit('Invalids'))
             for i in self.invalids:
-                console.print(f" - {i}", highlight=False)
+                console.print(f' - {i}', highlight=False)
 
     def _remove_from_list(self, target_list: list[str], item: str) -> None:
         """Helper function to remove an item from a list if it exists."""
@@ -240,7 +240,7 @@ class Targeter(pydantic.BaseModel):
             return False
 
     def _validate_ipv4_with_port(self, value: str) -> bool:
-        parts = value.split(":")
+        parts = value.split(':')
         if len(parts) != 2:
             return False
 
@@ -260,10 +260,10 @@ class Targeter(pydantic.BaseModel):
             return False
 
     def _validate_ipv6_with_port(self, value: str) -> bool:
-        if not (value.startswith("[") and "]:" in value):
+        if not (value.startswith('[') and ']:' in value):
             return False
 
-        ipv6, port = value[1:].split("]:", 1)
+        ipv6, port = value[1:].split(']:', 1)
 
         try:
             ipaddress.IPv6Address(ipv6)
@@ -289,10 +289,10 @@ class Targeter(pydantic.BaseModel):
         return fqdn.FQDN(value).is_valid
 
     def _validate_fqdn_with_port(self, value: str) -> bool:
-        if ":" not in value:
+        if ':' not in value:
             return False
 
-        host, port = value.rsplit(":", 1)
+        host, port = value.rsplit(':', 1)
 
         if not host or not self._validate_fqdn(host):
             return False
@@ -301,4 +301,4 @@ class Targeter(pydantic.BaseModel):
 
     def _validate_url(self, value: str) -> bool:
         parsed = urllib.parse.urlparse(value)
-        return parsed.scheme in ("http", "https", "ftp") and bool(parsed.netloc)
+        return parsed.scheme in ('http', 'https', 'ftp') and bool(parsed.netloc)

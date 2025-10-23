@@ -8,7 +8,6 @@ import urllib3
 import warnings
 import signal
 import types
-import platform
 
 from __version__ import __version__
 import analysis
@@ -141,41 +140,40 @@ def cli(
     table: bool,
     threads: int,
 ) -> None:
-    ##########
-    # Global #
-    ##########
+    #
+    # Global
+    #
+
     verbose.SILENT = silent
     verbose.HIGHLIGHT = False
     verbose.SOFT_WRAP = True
     verbose.DEBUG = debug
     verbose.CONSOLE = rich.console.Console(no_color=no_color)
 
-    #########################
-    # Windows not Supported #
-    #########################
-    if platform.system() == 'Windows':
-        verbose.critical("'scopez' is not so stables in Windows. Only in Linux and Darwin.")
+    #
+    # CLI Signals
+    #
 
-    ###############
-    # CLI Signals #
-    ###############
     signal.signal(signal.SIGINT, ctrl_c_signal_handler)
 
-    ##################
-    # CLI Validation #
-    ##################
+    #
+    # CLI Validation
+    #
+
     if json and table:
         raise click.UsageError("You can not use '-json' and '-table' options at the same time.")
 
-    ###########
-    # Welcome #
-    ###########
+    #
+    # Welcome
+    #
+
     verbose.print_banner(silent)
     verbose.warning('Use with caution. You are responsible for your actions.')
 
-    ##########
-    # GeoIP2 #
-    ##########
+    #
+    # GeoIP2
+    #
+
     verbose.info("Make sure 'geoip2-ipv4.csv' is downloaded.")
     GEOIP_SHA256 = '4d5b63c8a4dc7d78d395de2106f1ff1a38a654da67cdecde80ba7fe55db4cc7a'
     exe_location = os.path.dirname(os.path.abspath(__file__))
@@ -188,9 +186,10 @@ def cli(
         with open(geoip_filepath, 'wb') as f:
             f.write(response.content)
 
-    #########
-    # Input #
-    #########
+    #
+    # Input
+    #
+
     targeter = targets.Targeter()
     if target != '':
         verbose.info("Parse targets from the 'target' CLI parameter.")
@@ -208,23 +207,26 @@ def cli(
         verbose.info('Parse targets from the STDIN.')
         targeter.parse_targets_file('-')
 
-    ##############
-    # No Targets #
-    ##############
+    #
+    # No Targets
+    #
+
     if targeter.total_count() == 0:
         raise click.UsageError('You must supply at least one target.')
 
-    ##############
-    # Simulation #
-    ##############
+    #
+    # Simulation
+    #
+
     if simulate:
         verbose.info('Simulate and print the parsed targets.')
         targeter.print_targets()
         exit(1)
 
-    ############
-    # Analysis #
-    ############
+    #
+    # Analysis
+    #
+
     analyzer = analysis.Analyzer()
     analyzer.parse_geoip_data(geoip_filepath)
     verbose.info('Analyze the targets.')
@@ -237,9 +239,10 @@ def cli(
     if len(targeter.urls) > 0:
         analyzer.analyze_urls(targeter.urls, threads)
 
-    ##########
-    # stdout #
-    ##########
+    #
+    # stdout
+    #
+
     verbose.info('Print the results in the stdout.')
     verbose.SILENT = False
     if len(targeter.ipv4s) > 0:
@@ -275,11 +278,6 @@ def cli(
             print.Printer.print_invalids_as_table(targeter.invalids)
         else:
             print.Printer.print_invalids_as_table(targeter.invalids)
-
-    ############
-    # Beautify #
-    ############
-    verbose.normal('\n')
 
 
 if __name__ == '__main__':

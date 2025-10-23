@@ -8,17 +8,19 @@ import verbose
 class Printer:
     """Prints the target's analysis' results in various formats."""
 
-    #######
-    # ALL #
-    #######
+    #
+    # ALL
+    #
+
     @staticmethod
     def print_as_json(targets: list[any]) -> None:
         for t in targets:
             verbose.normal(rich.json.JSON(t.model_dump_json(), indent=None))
 
-    #########
-    # CIDRs #
-    #########
+    #
+    # CIDRs
+    #
+
     @staticmethod
     def print_cidrs_as_table(cidrs: list[models.CIDR]) -> None:
         t = rich.table.Table(box=rich.box.ASCII)
@@ -53,9 +55,10 @@ class Printer:
                 f'[white]{cidr.type}[/white],[green]{cidr.cidr}[/green],[yellow]{cidr.number_of_hosts}[/yellow],[yellow]{cidr.visibility}[/yellow],[red]{cidr.asn_country_code}[/red],[red]{cidr.asn_description}[/red],[red]{cidr.asn_network}[/red]',
             )
 
-    #######
-    # IPs #
-    #######
+    #
+    # IPs
+    #
+
     @staticmethod
     def print_ipv4s_as_table(ipv4s: list[models.IPV4]) -> None:
         t = rich.table.Table(box=rich.box.ASCII)
@@ -95,9 +98,10 @@ class Printer:
                 f'[blue]{"pingable" if ipv4.pingable else "not pingable"}[/blue]'
             )
 
-    #########
-    # FQDNs #
-    #########
+    #
+    # FQDNs
+    #
+
     @staticmethod
     def print_fqdns_as_table(fqdns: list[models.FQDN]) -> None:
         t = rich.table.Table(box=rich.box.ASCII)
@@ -151,9 +155,10 @@ class Printer:
                     f'[white]{fqdn.type}[/white],[green]{fqdn.fqdn}[/green],[yellow]{" > ".join(fqdn.dns_chain) + " > Not Found"}[/yellow],[red]N/A[/red],[red]N/A[/red],[red]N/A[/red],[red]N/A[/red],[red]N/A[/red],[blue]N/A[/blue]',
                 )
 
-    ########
-    # URLs #
-    ########
+    #
+    # URLs
+    #
+
     @staticmethod
     def print_urls_as_table(urls: list[models.URL]) -> None:
         t = rich.table.Table(box=rich.box.ASCII)
@@ -210,9 +215,10 @@ class Printer:
                     f'[white]{url.type}[/white],[green]{url.url}[/green],[yellow]{" > ".join(url.fqdn.dns_chain) + " > Not Found"}[/yellow],[red]N/A[/red],[red]N/A[/red],[red]N/A[/red],[red]N/A[/red],[red]N/A[/red],[blue]N/A[/blue],[blue]N/A[/blue]',
                 )
 
-    ############
-    # Invalids #
-    ############
+    #
+    # Invalids
+    #
+
     @staticmethod
     def print_invalids_as_table(invalids: list[str]) -> None:
         t = rich.table.Table(box=rich.box.ASCII)
