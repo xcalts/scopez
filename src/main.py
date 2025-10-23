@@ -11,6 +11,7 @@ import types
 
 from __version__ import __version__
 import analysis
+import visualization
 import targets
 import validation
 import verbose
@@ -120,6 +121,13 @@ def ctrl_c_signal_handler(sig: int, frame: types.FrameType | None) -> None:
     category='OUTPUT',
 )
 @click.option(
+    '-visualize',
+    help='Visualize output as a network graph image. Specify the filename',
+    cls=utils.CustomOption,
+    callback=validation.validate_png_filename,
+    category='OUTPUT',
+)
+@click.option(
     '-threads',
     help='The max number of worker threads.',
     type=int,
@@ -138,6 +146,7 @@ def cli(
     exclude_file: str,
     json: bool,
     table: bool,
+    visualize: str,
     threads: int,
 ) -> None:
     #
@@ -242,6 +251,18 @@ def cli(
     #
     # stdout
     #
+
+    if visualize:
+        verbose.info('Visualize the targets as a network graph.')
+        visualizer = visualization.Visualizer()
+        visualizer.create_visualization_image(
+            analyzer.analyzed_ipv4s,
+            analyzer.analyzed_cidrs,
+            analyzer.analyzed_fqdns,
+            analyzer.analyzed_urls,
+            visualize,
+        )
+        return
 
     verbose.info('Print the results in the stdout.')
     verbose.SILENT = False

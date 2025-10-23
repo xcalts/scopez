@@ -27,8 +27,6 @@
     <a href="https://pypi.org/project/scopez/">PyPI</a>
   </p>
 
-<img src="https://github.com/xcalts/scopez/raw/main/.github/usage.png" />
-
 </div>
 
 ## Features
@@ -122,12 +120,6 @@ In order to start developing you will need to to follow the instructions below.
 - [fqdn](https://github.com/ypcrts/fqdn)
 - [geoip2-ipv4](https://github.com/datasets/geoip2-ipv4)
 - [nuitka](https://github.com/Nuitka/Nuitka)
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-## Inspirations
-
-- [naabu](https://github.com/projectdiscovery/naabu)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 

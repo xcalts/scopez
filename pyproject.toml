@@ -32,6 +32,12 @@ dependencies = [
     "fqdn",
     # A fast, powerful, flexible and easy to use open source data analysis and manipulation tool.
     "pandas",
+    # Package for the creation, manipulation, and study of the structure, dynamics, and functions of complex networks.
+    "networkx",
+    # A comprehensive library for creating static, animated, and interactive visualizations in Python. 
+    "matplotlib",
+    # Fundamental algorithms for scientific computing in Python.
+    "scipy",
 ]
 
 # --- URLs ---

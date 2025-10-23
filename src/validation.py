@@ -11,6 +11,12 @@ def validate_file_exists(ctx, param, value):
     return value
 
 
+def validate_png_filename(ctx, param, value):
+    if not value.lower().endswith('.png'):
+        raise click.BadParameter("Output filename must end with '.png'.")
+    return value
+
+
 def _file_exists(filepath: str) -> bool:
     """
     Checks if a file exists at the given path.
