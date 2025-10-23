@@ -29,6 +29,16 @@
 
 </div>
 
+## Installation
+
+You can install `scopez` using `uv`.
+
+```
+uv tool install scopez
+```
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
 ## Features
 
 - Parses a file filled with targets
@@ -50,16 +60,6 @@
 - **Proxies** support for URL probing
 - **Markdown** output
 - **Configuration** YAML file
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-## Installation
-
-You can install `scopez` using `uv`.
-
-```
-uv tool install scopez
-```
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
