@@ -72,6 +72,7 @@ DEBUG:
   -version   Show the version and exit.
   -no-color  Disable colors in CLI output.
   -silent    Display only results in output.
+  -debug     Display debug messages.
   -simulate  Display the parsed targets.
 
 INPUT:
@@ -81,8 +82,9 @@ INPUT:
   -exclude-file     List of targets to exclude from analysis (file).
 
 OUTPUT:
-  -json   Write output in JSON lines format.
-  -table  Write output in Table format.
+  -json       Write output in JSON lines format.
+  -table      Write output in Table format.
+  -visualize  Visualize output as a network graph image. Specify the filename
 
 TWEAK:
   -threads  The max number of worker threads.
@@ -107,19 +109,6 @@ In order to start developing you will need to to follow the instructions below.
 > (.venv) scopez --version
 > (.venv) ruff check --fix
 ```
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-## Dependencies
-
-- [click](https://github.com/pallets/click)
-- [requests](https://github.com/psf/requests)
-- [rich](https://github.com/Textualize/rich)
-- [pydantic](https://github.com/pydantic/pydantic)
-- [ipwhois](https://github.com/secynic/ipwhois)
-- [fqdn](https://github.com/ypcrts/fqdn)
-- [geoip2-ipv4](https://github.com/datasets/geoip2-ipv4)
-- [nuitka](https://github.com/Nuitka/Nuitka)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
