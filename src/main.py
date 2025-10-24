@@ -122,7 +122,7 @@ def ctrl_c_signal_handler(sig: int, frame: types.FrameType | None) -> None:
 )
 @click.option(
     '-visualize',
-    help='Visualize output as a network graph image. Specify the filename',
+    help='Visualize output as a network graph image. Specify the filename.',
     cls=utils.CustomOption,
     callback=validation.validate_png_filename,
     category='OUTPUT',

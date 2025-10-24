@@ -42,7 +42,7 @@ uv tool install scopez
 ## Features
 
 - Parses a file filled with targets
-- Does IP networks **math**
+- Does IP network **math**
 - Captures **RDAP** data
 - **Pings** IPs and FQDNs
 - Displays **DNS chains**
@@ -50,16 +50,7 @@ uv tool install scopez
 - **Threads** support
 - Multiple input support - **STDIN/FILE/CIDR/IP/FQDN/URL**
 - Multiple output support - **TABLE/JSON/TXT/STDOUT**
-- Single executable file using `nuitka` - **easy installation**
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-## TODO
-
-- Input support - **IP with port, FQDN with port**
-- **Proxies** support for URL probing
-- **Markdown** output
-- **Configuration** YAML file
+- Visualize the network using a graph
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -91,23 +82,6 @@ TWEAK:
 
 OTHER:
   -help  Show this message and exit.
-```
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-## Developing
-
-In order to start developing you will need to to follow the instructions below.
-
-```txt
-> pyenv install 3.12.6
-> pyenv global 3.12.6
-> python3 -m venv .venv
-> source .venv/bin/activate
-> (.venv) pip install ruff pre-commit
-> (.venv) pip install -e .
-> (.venv) scopez --version
-> (.venv) ruff check --fix
 ```
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
