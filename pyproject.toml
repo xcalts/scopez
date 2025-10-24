@@ -8,7 +8,7 @@ your_package = ["geoip2-ipv4.csv"]
 # --- Project Settings ---
 [project]
 name = "scopez"
-version = "v0.1.2"
+version = "v0.1.3"
 description = "Scopez verifies connectivity to target servers, reveals CDN presence, and provides detailed target insights like reachability and RDAP."
 readme = "README.md"
 requires-python = ">3.11"
