@@ -36,17 +36,24 @@ class Visualizer(pydantic.BaseModel):
         icons = {k: PIL.Image.open(fname) for k, fname in icons_paths.items()}
 
         verbose.debug('Create the network graph nodes.')
+        total = len(analyzed_ipv4s) + len(analyzed_cidrs) + len(analyzed_fqdns) + len(analyzed_urls)
         G = nx.Graph()
-        G.add_node('center', image=icons['target'], name='center')
+        if total > 1:
+            G.add_node('center', image=icons['target'], name='center')
         for ip in analyzed_ipv4s:
             G.add_node(ip.ipv4, image=icons['ipv4'], name=ip.ipv4)
-            G.add_edge('center', ip.ipv4)
+            if total > 1:
+                G.add_edge('center', ip.ipv4)
+
         for c in analyzed_cidrs:
             G.add_node(c.cidr, image=icons['cidr'], name=c.cidr)
-            G.add_edge('center', c.cidr)
+            if total > 1:
+                G.add_edge('center', c.cidr)
+
         for f in analyzed_fqdns:
             G.add_node(f.fqdn, image=icons['fqdn'], name=f.fqdn)
-            G.add_edge('center', f.fqdn)
+            if total > 1:
+                G.add_edge('center', f.fqdn)
 
             _chain_wo_fqdn = [node for node in f.dns_chain if node != f.fqdn]
             if _chain_wo_fqdn:
@@ -63,9 +70,11 @@ class Visualizer(pydantic.BaseModel):
                 error = f'{f.fqdn} not found'
                 G.add_node(error, image=icons['404'], name='404', kind='404')
                 G.add_edge(f.dns_chain[-1], error)
+
         for u in analyzed_urls:
             G.add_node(u.url, image=icons['url'], name=u.url)
-            G.add_edge('center', u.url)
+            if total > 1:
+                G.add_edge('center', u.url)
 
             G.add_node(u.fqdn.fqdn, image=icons['fqdn'], name=u.fqdn.fqdn)
             G.add_edge(u.url, u.fqdn.fqdn)
@@ -88,7 +97,8 @@ class Visualizer(pydantic.BaseModel):
 
         verbose.debug('Initialize the figure.')
         pos = nx.kamada_kawai_layout(G)
-        pos['center'] = np.array([0.0, 0.0])
+        if total > 1:
+            pos['center'] = np.array([0.0, 0.0])
         fig, ax = plt.subplots(figsize=(19.2, 10.8))
 
         verbose.debug('Draw the edges.')
