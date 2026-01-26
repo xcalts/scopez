@@ -26,7 +26,7 @@ class Analyzer(pydantic.BaseModel):
     geoip_records: list[models.GeoIPRecord] = []
 
     def parse_geoip_data(self, geoip_csv_database_filepath: str):
-        data_frame = pandas.read_csv(geoip_csv_database_filepath).where(pandas.notnull, None)
+        data_frame = pandas.read_csv(geoip_csv_database_filepath).fillna('')
         records = data_frame.to_dict(orient='records')
 
         for r in records:
