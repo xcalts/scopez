@@ -31,7 +31,7 @@ class Targeter(pydantic.BaseModel):
             targets_filepath (str): Path to file or "-" to read from stdin.
 
         """
-        file = sys.stdin if targets_filepath == '-' else open(targets_filepath)
+        file = sys.stdin if targets_filepath == '-' else open(targets_filepath, 'r', encoding='utf-8')
 
         with file as f:
             for line in f:
@@ -92,7 +92,7 @@ class Targeter(pydantic.BaseModel):
     def parse_exclusions_file(self, exclusions_filepath: str) -> None:
         """Parses targets in the exclusions file and removes them from the targets list."""
         # Extracting the exclusions and removing them from the target lists
-        with open(exclusions_filepath) as file:
+        with open(exclusions_filepath, 'r', encoding='utf-8') as file:
             for val in file:
                 val = val.strip()
                 if self._validate_ipv4(val):
