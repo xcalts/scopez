@@ -139,9 +139,14 @@ class Analyzer(pydantic.BaseModel):
                 except Exception:
                     time.sleep(5)
                     continue
-            ipv4_obj.asn_network = rdap.get('network', {}).get('name', '').replace(',', '')
-            ipv4_obj.asn_country_code = rdap.get('asn_country_code')
-            ipv4_obj.asn_description = rdap.get('asn_description', '').replace(',', '')
+
+            network = rdap.get('network') or {}
+            name = network.get('name') or ''  # <- handle None
+            desc = rdap.get('asn_description') or ''  # <- handle None
+
+            ipv4_obj.asn_network = str(name).replace(',', '')
+            ipv4_obj.asn_country_code = rdap.get('asn_country_code') or 'N/A'
+            ipv4_obj.asn_description = str(desc).replace(',', '')
         else:
             ipv4_obj.asn_network = 'N/A'
             ipv4_obj.asn_country_code = 'N/A'
@@ -204,9 +209,13 @@ class Analyzer(pydantic.BaseModel):
                 except Exception:
                     time.sleep(5)
                     continue
-            cidr_obj.asn_network = rdap.get('network', {}).get('name', '').replace(',', '')
-            cidr_obj.asn_country_code = rdap.get('asn_country_code')
-            cidr_obj.asn_description = rdap.get('asn_description', '').replace(',', '')
+            network = rdap.get('network') or {}
+            name = network.get('name') or ''
+            desc = rdap.get('asn_description') or ''
+
+            cidr_obj.asn_network = str(name).replace(',', '')
+            cidr_obj.asn_country_code = rdap.get('asn_country_code') or 'N/A'
+            cidr_obj.asn_description = str(desc).replace(',', '')
         else:
             cidr_obj.asn_network = 'N/A'
             cidr_obj.asn_country_code = 'N/A'
