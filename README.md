@@ -73,9 +73,7 @@ INPUT:
   -exclude-file     List of targets to exclude from analysis (file).
 
 OUTPUT:
-  -json       Write output in JSON lines format.
-  -table      Write output in Table format.
-  -visualize  Visualize output as a network graph image. Specify the filename
+  -output-prefix  Output file prefix. Will generate <prefix>.json, <prefix>.txt, and <prefix>.png files.
 
 TWEAK:
   -threads  The max number of worker threads.

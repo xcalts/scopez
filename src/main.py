@@ -107,24 +107,11 @@ def ctrl_c_signal_handler(sig: int, frame: types.FrameType | None) -> None:
     category='INPUT',
 )
 @click.option(
-    '-json',
-    help='Write output in JSON lines format.',
-    is_flag=True,
+    '-output-prefix',
+    help='Output file prefix. Will generate <prefix>.json, <prefix>.txt, and <prefix>.png files.',
+    type=str,
+    required=True,
     cls=utils.CustomOption,
-    category='OUTPUT',
-)
-@click.option(
-    '-table',
-    help='Write output in Table format.',
-    is_flag=True,
-    cls=utils.CustomOption,
-    category='OUTPUT',
-)
-@click.option(
-    '-visualize',
-    help='Visualize output as a network graph image. Specify the filename.',
-    cls=utils.CustomOption,
-    callback=validation.validate_png_filename,
     category='OUTPUT',
 )
 @click.option(
@@ -144,9 +131,7 @@ def cli(
     list: str,
     exclude_targets: str,
     exclude_file: str,
-    json: bool,
-    table: bool,
-    visualize: str,
+    output_prefix: str,
     threads: int,
 ) -> None:
     #
@@ -160,17 +145,10 @@ def cli(
     verbose.CONSOLE = rich.console.Console(no_color=no_color)
 
     #
-    # CLI Signals
+    # CLI signals
     #
 
     signal.signal(signal.SIGINT, ctrl_c_signal_handler)
-
-    #
-    # CLI Validation
-    #
-
-    if json and table:
-        raise click.UsageError("You can not use '-json' and '-table' options at the same time.")
 
     #
     # Welcome
@@ -217,7 +195,7 @@ def cli(
         targeter.parse_targets_file('-')
 
     #
-    # No Targets
+    # No targets
     #
 
     if targeter.total_count() == 0:
@@ -249,56 +227,68 @@ def cli(
         analyzer.analyze_urls(targeter.urls, threads)
 
     #
-    # stdout
+    # Output - Generate all three files
     #
 
-    if visualize:
-        verbose.info('Visualize the targets as a network graph.')
-        visualizer = visualization.Visualizer()
-        visualizer.create_visualization_image(
-            analyzer.analyzed_ipv4s,
-            analyzer.analyzed_cidrs,
-            analyzer.analyzed_fqdns,
-            analyzer.analyzed_urls,
-            visualize,
-        )
-        return
+    json_file = f'{output_prefix}.json'
+    txt_file = f'{output_prefix}.txt'
+    png_file = f'{output_prefix}.png'
 
-    verbose.info('Print the results in the stdout.')
+    for file in [json_file, txt_file, png_file]:
+        if os.path.exists(file):
+            os.remove(file)
+
+    verbose.info(f'Generating output files: {json_file}, {txt_file}, {png_file}')
     verbose.SILENT = False
+
+    #
+    # 1. Generate JSON output
+    #
+
+    verbose.info(f'Writing JSON output to {json_file}')
     if len(targeter.ipv4s) > 0:
-        if table:
-            print.Printer.print_ipv4s_as_table(analyzer.analyzed_ipv4s)
-        elif json:
-            print.Printer.print_as_json(analyzer.analyzed_ipv4s)
-        else:
-            print.Printer.print_ipv4s_as_table(analyzer.analyzed_ipv4s)
+        print.Printer.print_as_json(analyzer.analyzed_ipv4s, json_file)
     if len(targeter.cidrs_v4) > 0:
-        if table:
-            print.Printer.print_cidrs_as_table(analyzer.analyzed_cidrs)
-        elif json:
-            print.Printer.print_as_json(analyzer.analyzed_cidrs)
-        else:
-            print.Printer.print_cidrs_as_table(analyzer.analyzed_cidrs)
+        print.Printer.print_as_json(analyzer.analyzed_cidrs, json_file)
     if len(targeter.fqdns) > 0:
-        if table:
-            print.Printer.print_fqdns_as_table(analyzer.analyzed_fqdns)
-        elif json:
-            print.Printer.print_as_json(analyzer.analyzed_fqdns)
-        else:
-            print.Printer.print_fqdns_as_table(analyzer.analyzed_fqdns)
+        print.Printer.print_as_json(analyzer.analyzed_fqdns, json_file)
     if len(targeter.urls) > 0:
-        if table:
-            print.Printer.print_urls_as_table(analyzer.analyzed_urls)
-        elif json:
-            print.Printer.print_as_json(analyzer.analyzed_urls)
-        else:
-            print.Printer.print_urls_as_table(analyzer.analyzed_urls)
+        print.Printer.print_as_json(analyzer.analyzed_urls, json_file)
+
+    #
+    # 2. Generate TXT (table) output
+    #
+
+    verbose.info(f'Writing table output to {txt_file}')
+    if len(targeter.ipv4s) > 0:
+        print.Printer.print_ipv4s_as_table(analyzer.analyzed_ipv4s, txt_file)
+    if len(targeter.cidrs_v4) > 0:
+        print.Printer.print_cidrs_as_table(analyzer.analyzed_cidrs, txt_file)
+    if len(targeter.fqdns) > 0:
+        print.Printer.print_fqdns_as_table(analyzer.analyzed_fqdns, txt_file)
+    if len(targeter.urls) > 0:
+        print.Printer.print_urls_as_table(analyzer.analyzed_urls, txt_file)
     if len(targeter.invalids) > 0:
-        if table:
-            print.Printer.print_invalids_as_table(targeter.invalids)
-        else:
-            print.Printer.print_invalids_as_table(targeter.invalids)
+        print.Printer.print_invalids_as_table(targeter.invalids, txt_file)
+
+    #
+    # 3. Generate PNG (visualization) output
+    #
+
+    verbose.info(f'Creating visualization image: {png_file}')
+    visualizer = visualization.Visualizer()
+    visualizer.create_visualization_image(
+        analyzer.analyzed_ipv4s,
+        analyzer.analyzed_cidrs,
+        analyzer.analyzed_fqdns,
+        analyzer.analyzed_urls,
+        png_file,
+    )
+
+    verbose.info('All outputs generated successfully!')
+    verbose.info(f'  - JSON: {json_file}')
+    verbose.info(f'  - TXT:  {txt_file}')
+    verbose.info(f'  - PNG:  {png_file}')
 
 
 if __name__ == '__main__':

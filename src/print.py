@@ -1,5 +1,6 @@
 import rich.table
 import rich.json
+from rich.console import Console
 
 import models
 import verbose
@@ -8,21 +9,31 @@ import verbose
 class Printer:
     """Prints the target's analysis' results in various formats."""
 
+    @staticmethod
+    def _output(content, output_file=None):
+        """Helper method to output content to console or file."""
+        if output_file:
+            with open(output_file, 'a') as f:
+                console = Console(file=f)
+                console.print(content)
+        else:
+            verbose.normal(content)
+
     #
     # ALL
     #
 
     @staticmethod
-    def print_as_json(targets: list[any]) -> None:
+    def print_as_json(targets: list[any], output_file=None) -> None:
         for t in targets:
-            verbose.normal(rich.json.JSON(t.model_dump_json(), indent=None))
+            Printer._output(rich.json.JSON(t.model_dump_json(), indent=None), output_file)
 
     #
     # CIDRs
     #
 
     @staticmethod
-    def print_cidrs_as_table(cidrs: list[models.CIDR]) -> None:
+    def print_cidrs_as_table(cidrs: list[models.CIDR], output_file=None) -> None:
         t = rich.table.Table(box=rich.box.ASCII)
 
         t.add_column('CIDR')
@@ -46,13 +57,14 @@ class Printer:
                 cidr.geoip_country,
             )
 
-        verbose.normal(t)
+        Printer._output(t, output_file)
 
     @staticmethod
-    def print_cidrs_as_raw(cidrs: list[models.CIDR]) -> None:
+    def print_cidrs_as_raw(cidrs: list[models.CIDR], output_file=None) -> None:
         for cidr in cidrs:
-            verbose.normal(
+            Printer._output(
                 f'[white]{cidr.type}[/white],[green]{cidr.cidr}[/green],[yellow]{cidr.number_of_hosts}[/yellow],[yellow]{cidr.visibility}[/yellow],[red]{cidr.asn_country_code}[/red],[red]{cidr.asn_description}[/red],[red]{cidr.asn_network}[/red]',
+                output_file,
             )
 
     #
@@ -60,7 +72,7 @@ class Printer:
     #
 
     @staticmethod
-    def print_ipv4s_as_table(ipv4s: list[models.IPV4]) -> None:
+    def print_ipv4s_as_table(ipv4s: list[models.IPV4], output_file=None) -> None:
         t = rich.table.Table(box=rich.box.ASCII)
 
         t.add_column('IP Address (v4)')
@@ -84,18 +96,20 @@ class Printer:
                 'yes' if ipv4.pingable else 'no',
             )
 
-        verbose.normal(t)
+        Printer._output(t, output_file)
 
-    def print_ipv4s_as_raw(ipv4s: list[models.IPV4]) -> None:
+    @staticmethod
+    def print_ipv4s_as_raw(ipv4s: list[models.IPV4], output_file=None) -> None:
         for ipv4 in ipv4s:
-            verbose.normal(
+            Printer._output(
                 f'[white]{ipv4.type}[/white],'
                 f'[green]{ipv4.ipv4}[/green],'
                 f'[yellow]{ipv4.visibility}[/yellow],'
                 f'[red]{ipv4.asn_country_code}[/red],'
                 f'[red]{ipv4.asn_description}[/red],'
                 f'[red]{ipv4.asn_network}[/red],'
-                f'[blue]{"pingable" if ipv4.pingable else "not pingable"}[/blue]'
+                f'[blue]{"pingable" if ipv4.pingable else "not pingable"}[/blue]',
+                output_file,
             )
 
     #
@@ -103,7 +117,7 @@ class Printer:
     #
 
     @staticmethod
-    def print_fqdns_as_table(fqdns: list[models.FQDN]) -> None:
+    def print_fqdns_as_table(fqdns: list[models.FQDN], output_file=None) -> None:
         t = rich.table.Table(box=rich.box.ASCII)
 
         t.add_column('FQDN')
@@ -140,19 +154,21 @@ class Printer:
                     'N/A',
                 )
 
-        verbose.normal(t)
+        Printer._output(t, output_file)
 
     @staticmethod
-    def print_fqdns_as_raw(fqdns: list[models.FQDN]) -> None:
+    def print_fqdns_as_raw(fqdns: list[models.FQDN], output_file=None) -> None:
         for fqdn in fqdns:
             if fqdn.hosts_found:
                 for ip in fqdn.destination_ips:
-                    verbose.normal(
+                    Printer._output(
                         f'[white]{fqdn.type}[/white],[green]{fqdn.fqdn}[/green],[yellow]{" > ".join(fqdn.dns_chain) + f" > {ip}"}[/yellow],[red]{ip.asn_country_code}[/red],[red]{ip.asn_description}[/red],[red]{ip.asn_network}[/red],[red]{ip.geoip_continent}[/red],[red]{ip.geoip_country}[/red],[blue]{"yes" if ip.pingable else "no"}[/blue]',
+                        output_file,
                     )
             else:
-                verbose.normal(
+                Printer._output(
                     f'[white]{fqdn.type}[/white],[green]{fqdn.fqdn}[/green],[yellow]{" > ".join(fqdn.dns_chain) + " > Not Found"}[/yellow],[red]N/A[/red],[red]N/A[/red],[red]N/A[/red],[red]N/A[/red],[red]N/A[/red],[blue]N/A[/blue]',
+                    output_file,
                 )
 
     #
@@ -160,7 +176,7 @@ class Printer:
     #
 
     @staticmethod
-    def print_urls_as_table(urls: list[models.URL]) -> None:
+    def print_urls_as_table(urls: list[models.URL], output_file=None) -> None:
         t = rich.table.Table(box=rich.box.ASCII)
 
         t.add_column('URL')
@@ -200,19 +216,21 @@ class Printer:
                     'N/A',
                 )
 
-        verbose.normal(t)
+        Printer._output(t, output_file)
 
     @staticmethod
-    def print_urls_as_raw(urls: list[models.URL]) -> None:
+    def print_urls_as_raw(urls: list[models.URL], output_file=None) -> None:
         for url in urls:
             if url.fqdn.hosts_found:
                 for ip in url.fqdn.destination_ips:
-                    verbose.normal(
+                    Printer._output(
                         f'[white]{url.type}[/white],[green]{url.url}[/green],[yellow]{" > ".join(url.fqdn.dns_chain) + f" > {ip}"}[/yellow],[red]{ip.asn_country_code}[/red],[red]{ip.asn_description}[/red],[red]{ip.asn_network}[/red],[red]{ip.geoip_continent}[/red],[red]{ip.geoip_country}[/red],[blue]{"yes" if ip.pingable else "no"}[/blue],[blue]{"yes" if url.reachable else "no"}[/blue]',
+                        output_file,
                     )
             else:
-                verbose.normal(
+                Printer._output(
                     f'[white]{url.type}[/white],[green]{url.url}[/green],[yellow]{" > ".join(url.fqdn.dns_chain) + " > Not Found"}[/yellow],[red]N/A[/red],[red]N/A[/red],[red]N/A[/red],[red]N/A[/red],[red]N/A[/red],[blue]N/A[/blue],[blue]N/A[/blue]',
+                    output_file,
                 )
 
     #
@@ -220,7 +238,7 @@ class Printer:
     #
 
     @staticmethod
-    def print_invalids_as_table(invalids: list[str]) -> None:
+    def print_invalids_as_table(invalids: list[str], output_file=None) -> None:
         t = rich.table.Table(box=rich.box.ASCII)
 
         t.add_column('Invalid')
@@ -228,9 +246,9 @@ class Printer:
         for invalid in invalids:
             t.add_row(invalid)
 
-        verbose.normal(t)
+        Printer._output(t, output_file)
 
     @staticmethod
-    def print_invalids_as_raw(invalids: list[str]) -> None:
+    def print_invalids_as_raw(invalids: list[str], output_file=None) -> None:
         for invalid in invalids:
-            verbose.normal(f'[white]invalid[/white],[red]{invalid}[/red]')
+            Printer._output(f'[white]invalid[/white],[red]{invalid}[/red]', output_file)
