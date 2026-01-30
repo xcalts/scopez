@@ -261,27 +261,27 @@ class Analyzer(pydantic.BaseModel):
             cname_record = ''
             try:
                 answer = dns.resolver.resolve_at(random.choice(DNS_SERVERS), f.dns_chain[-1], 'CNAME')
-                time.sleep(1)
+
+                time.sleep(0.2)
 
                 for rdap in answer:
                     cname_record = str(rdap.target).rstrip('.')  # Remove the trailing dot.
 
             except dns.resolver.NXDOMAIN:
-                # NXDOMAIN stands for Non-Existent Domain.
+                verbose.debug(f'{f.dns_chain[-1]}: NXDOMAIN - domain does not exist')
                 break
 
             except dns.resolver.NoAnswer:
-                # The domain does exist, but the specific DNS record type you're asking for is missing.
+                verbose.debug(f'{f.dns_chain[-1]}: NoAnswer - no CNAME record found, move to A record lookup')
+                break
+
+            except dns.resolver.NoNameservers:
+                verbose.debug(f'{f.dns_chain[-1]}: NoNameservers - authoritative servers are unreachable')
                 break
 
             except dns.resolver.LifetimeTimeout:
-                # The resolution lifetime expired.
-                verbose.debug('dns.resolver.LifetimeTimeout')
-                continue
-
-            except dns.resolver.NoNameservers:
-                # If no non-broken nameservers are available to answer the question.
-                verbose.debug('dns.resolver.NoNameservers')
+                verbose.debug(f'{f.dns_chain[-1]}: LifetimeTimeout - wait a couple of seconds and repeat')
+                time.sleep(2)
                 continue
 
             f.dns_chain.append(cname_record)
@@ -291,8 +291,14 @@ class Analyzer(pydantic.BaseModel):
         ############################################################
         while True:
             try:
-                answer = dns.resolver.resolve_at(random.choice(DNS_SERVERS), f.dns_chain[-1], 'A')
-                time.sleep(1)
+                answer = dns.resolver.resolve_at(
+                    random.choice(DNS_SERVERS),
+                    f.dns_chain[-1],
+                    'A',
+                    lifetime=10,
+                )
+
+                time.sleep(0.2)
 
                 resolved_ips = []
                 for rdap in answer:
@@ -307,21 +313,20 @@ class Analyzer(pydantic.BaseModel):
                 break
 
             except dns.resolver.NXDOMAIN:
-                # NXDOMAIN stands for Non-Existent Domain.
+                verbose.debug(f'{f.dns_chain[-1]}: NXDOMAIN - domain does not exist')
                 break
 
             except dns.resolver.NoAnswer:
-                # The domain does exist, but the specific DNS record type you're asking for is missing.
+                verbose.debug(f'{f.dns_chain[-1]}: NoAnswer - no A record found')
+                break
+
+            except dns.resolver.NoNameservers:
+                verbose.debug(f'{f.dns_chain[-1]}: NoNameservers - authoritative servers are unreachable')
                 break
 
             except dns.resolver.LifetimeTimeout:
-                # The resolution lifetime expired.
-                verbose.debug('dns.resolver.LifetimeTimeout')
-                continue
-
-            except dns.resolver.NoNameservers:
-                # If no non-broken nameservers are available to answer the question.
-                verbose.debug('dns.resolver.NoNameservers')
+                verbose.debug(f'{f.dns_chain[-1]}: LifetimeTimeout - wait a couple of seconds and repeat')
+                time.sleep(2)
                 continue
 
         return f
