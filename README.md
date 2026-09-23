@@ -1,3 +1,5 @@
+
+
 <a id="readme-top"></a>
 
 <!-- PROJECT LOGO -->
@@ -49,7 +51,7 @@ uv tool install scopez
 - Unix friendly input/output
 - **Threads** support
 - Multiple input support - **STDIN/FILE/CIDR/IP/FQDN/URL**
-- Multiple output support - **TABLE/JSON/TXT/STDOUT**
+- Multiple output support - **TABLE/JSON/TXT/PNG**
 - Visualize the network using a graph
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
