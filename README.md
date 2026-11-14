@@ -10,7 +10,6 @@
 [![MacOS][macos-shield]][macos-url]
 [![Stars][stars-shield]][stars-url]
 [![Contributors][contributors-shield]][contributors-url]
-[![Lint][lint-shield]][lint-url]
 [![Issues][issues-shield]][issues-url]
 
   <h1>Scopez</h1>
@@ -110,8 +109,6 @@ EXAMPLES:
 
 [contributors-shield]: https://img.shields.io/github/contributors/xcalts/scopez.svg?style=flat
 [contributors-url]: https://github.com/xcalts/scopez/graphs/contributors
-[lint-shield]: https://img.shields.io/github/actions/workflow/status/xcalts/scopez/ruff.yml?style=flat&label=ruff-lint
-[lint-url]: https://github.com/xcalts/scopez/actions/workflows/ruff.yml
 [stars-shield]: https://img.shields.io/github/stars/xcalts/scopez.svg?style=flat
 [stars-url]: https://github.com/xcalts/scopez/stargazers
 [issues-shield]: https://img.shields.io/github/issues/xcalts/scopez.svg?style=flat
