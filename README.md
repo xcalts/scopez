@@ -82,22 +82,26 @@ TWEAK:
 
 OTHER:
   -help  Show this message and exit.
+
+EXAMPLES:
+  # Analyze a mix of targets and print tables.
+  scopez -target 8.8.8.8,1.1.1.0/24,www.github.com,https://example.com -table
+
+  # Analyze targets from a file and print JSON lines (logs go to stderr).
+  scopez -list targets.txt -json > results.json
+
+  # Read targets from STDIN and keep only the public IPs with jq.
+  cat targets.txt | scopez -json -silent | jq -r 'select(.type == "ipv4" and .visibility == "Public") | .ipv4'
+
+  # Exclude out-of-scope targets.
+  scopez -list targets.txt -exclude-file out-of-scope.txt -table
+
+  # Draw the targets, their DNS chains and IPs as a network graph.
+  scopez -list targets.txt -visual -output-file network.png
+
+  # Preview how the targets are parsed without analyzing them.
+  scopez -list targets.txt -simulate
 ```
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-## Contributing
-
-Any contributions you make are **greatly appreciated**.
-
-If you have a suggestion that would make this better, please fork the repo and create a pull request.
-You can also simply open an issue with the tag "enhancement".
-
-1. Fork the Project.
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`).
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`).
-4. Push to the Branch (`git push origin feature/AmazingFeature`).
-5. Open a Pull Request.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
