@@ -99,7 +99,8 @@ class Visualizer(pydantic.BaseModel):
         pos = nx.kamada_kawai_layout(G)
         if total > 1:
             pos['center'] = np.array([0.0, 0.0])
-        fig, ax = plt.subplots(figsize=(19.2, 10.8))
+        fig_width, fig_height = 19.2, 10.8
+        fig, ax = plt.subplots(figsize=(fig_width, fig_height))
 
         verbose.debug('Draw the edges.')
         nx.draw_networkx_edges(
@@ -111,17 +112,30 @@ class Visualizer(pydantic.BaseModel):
             min_target_margin=15,
         )
 
+        # Fix the view before placing the icons: use the same scale on both axes and a minimum span, so that
+        # small or collinear layouts (e.g. a single target, or one FQDN with two IPs) are not stretched.
+        verbose.debug('Set the view limits.')
+        xs = [p[0] for p in pos.values()]
+        ys = [p[1] for p in pos.values()]
+        box = ax.get_position()
+        box_aspect = (box.width * fig_width) / (box.height * fig_height)
+        view_height = max(max(ys) - min(ys), (max(xs) - min(xs)) / box_aspect, 1.0) * 1.25
+        view_width = view_height * box_aspect
+        center_x, center_y = (min(xs) + max(xs)) / 2, (min(ys) + max(ys)) / 2
+        ax.set_xlim(center_x - view_width / 2, center_x + view_width / 2)
+        ax.set_ylim(center_y - view_height / 2, center_y + view_height / 2)
+
         # --- Draw ---
         verbose.debug('Draw the icons.')
         tr_figure = ax.transData.transform
         tr_axes = fig.transFigure.inverted().transform
-        icon_size = (ax.get_xlim()[1] - ax.get_xlim()[0]) * 0.01
-        icon_center = icon_size / 2.0
+        icon_width = 0.015  # Fraction of the figure width; independent of the layout.
+        icon_height = icon_width * fig_width / fig_height  # Keep the icons square.
         for n in G.nodes:
             xf, yf = tr_figure(pos[n])
             xa, ya = tr_axes((xf, yf))
             # get overlapped axes and plot icon
-            a = plt.axes([xa - icon_center, ya - icon_center, icon_size, icon_size])
+            a = plt.axes([xa - icon_width / 2, ya - icon_height / 2, icon_width, icon_height])
             a.imshow(G.nodes[n]['image'])
             a.axis('off')
 
@@ -135,7 +149,7 @@ class Visualizer(pydantic.BaseModel):
 
             ax.text(
                 pos[n][0],
-                pos[n][1] + 0.035,  # offset upward
+                pos[n][1] + view_height * 0.015,  # offset upward, above the icon
                 node_name,
                 fontsize=6,
                 bbox=label_options,
