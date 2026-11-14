@@ -4,7 +4,8 @@ SILENT = False
 HIGHLIGHT = False
 SOFT_WRAP = False
 DEBUG = False
-CONSOLE = {}
+CONSOLE = {}  # Logs, banner and errors (stderr).
+OUT = {}  # Results (stdout).
 
 
 def print_banner(silent: bool, highlight: bool = True) -> None:
@@ -45,6 +46,6 @@ def debug(message: str) -> None:
         CONSOLE.print(f'[blue][DEBUG]   [/blue] {message}', highlight=HIGHLIGHT, soft_wrap=SOFT_WRAP)
 
 
-def normal(message: str) -> None:
-    if not SILENT:
-        CONSOLE.print(message, highlight=HIGHLIGHT, soft_wrap=SOFT_WRAP)
+def normal(message) -> None:
+    """Print a result to stdout. Results are always shown, even with `-silent`."""
+    OUT.print(message, highlight=HIGHLIGHT, soft_wrap=SOFT_WRAP)

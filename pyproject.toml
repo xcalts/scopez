@@ -28,6 +28,8 @@ dependencies = [
     "pydantic",
     # Retrieve and parse whois data for IPv4 and IPv6 addresses.
     "ipwhois",
+    # DNS toolkit used to follow CNAME chains and resolve A records.
+    "dnspython>=2.6",
     # Validates fully-qualified domain names against RFC 1123, so that they are acceptable to modern bowsers.
     "fqdn",
     # A fast, powerful, flexible and easy to use open source data analysis and manipulation tool.

@@ -13,9 +13,8 @@
 [![Lint][lint-shield]][lint-url]
 [![Issues][issues-shield]][issues-url]
 
-  <a href="https://github.com/xcalts/scopez">
-    <img src="https://github.com/xcalts/scopez/raw/main/.github/logo.svg" alt="Logo" height="100" />
-  </a>
+  <h1>Scopez</h1>
+  
   <p align="center">
     Scopez verifies connectivity to target servers, reveals CDN presence, and provides detailed target insights like reachability and RDAP.
     <br />
@@ -49,7 +48,7 @@ uv tool install scopez
 - Unix friendly input/output
 - **Threads** support
 - Multiple input support - **STDIN/FILE/CIDR/IP/FQDN/URL**
-- Multiple output support - **TABLE/JSON/TXT/STDOUT**
+- Multiple output formats - **TABLE/JSON** (stdout) and **PNG** network graph
 - Visualize the network using a graph
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -73,7 +72,10 @@ INPUT:
   -exclude-file     List of targets to exclude from analysis (file).
 
 OUTPUT:
-  -output-prefix  Output file prefix. Will generate <prefix>.json, <prefix>.txt, and <prefix>.png files.
+  -table        Print the results as tables.
+  -json         Print the results as JSON.
+  -visual       Visualize the results as a network graph image (requires -output-file).
+  -output-file  Output image file for -visual (e.g., network.png).
 
 TWEAK:
   -threads  The max number of worker threads.

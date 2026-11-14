@@ -1,12 +1,16 @@
 import pydantic
 import ipwhois
+import ipwhois.exceptions
+import dns.exception
 import dns.resolver
 import requests
 import pandas
 
+import bisect
 import ipaddress
+import socket
 import subprocess
-import os
+import sys
 import concurrent.futures
 import random
 import urllib.parse
@@ -16,32 +20,42 @@ import models
 import verbose
 
 
+RDAP_MAX_ATTEMPTS = 3
+RDAP_RETRY_DELAY = 5
+DNS_MAX_TIMEOUTS = 3
+DNS_QUERY_DELAY = 0.2
+MAX_CNAME_CHAIN = 16
+DEFAULT_PORTS = {'http': 80, 'https': 443, 'ftp': 21}
+
+
 class Analyzer(pydantic.BaseModel):
-    """Analyzes raw targets and populates them with additiona information."""
+    """Analyzes raw targets and populates them with additional information."""
 
     analyzed_ipv4s: list[models.IPV4] = []
     analyzed_cidrs: list[models.CIDR] = []
     analyzed_fqdns: list[models.FQDN] = []
     analyzed_urls: list[models.URL] = []
-    geoip_records: list[models.GeoIPRecord] = []
 
-    def parse_geoip_data(self, geoip_csv_database_filepath: str):
-        data_frame = pandas.read_csv(geoip_csv_database_filepath).fillna('')
-        records = data_frame.to_dict(orient='records')
+    # GeoIP index: networks sorted by their first address, for binary search.
+    _geoip_starts: list[int] = pydantic.PrivateAttr(default_factory=list)
+    _geoip_ends: list[int] = pydantic.PrivateAttr(default_factory=list)
+    _geoip_locations: list[tuple[str, str]] = pydantic.PrivateAttr(default_factory=list)
 
-        for r in records:
-            self.geoip_records.append(
-                models.GeoIPRecord(
-                    network=r.get('network'),
-                    geoname_id=r.get('geoname_id'),
-                    continent_code=r.get('continent_code'),
-                    continent_name=r.get('continent_name'),
-                    country_iso_code=r.get('country_iso_code'),
-                    country_name=r.get('country_name'),
-                    is_anonymous_proxy=r.get('is_anonymous_proxy'),
-                    is_satellite_provider=r.get('is_satellite_provider'),
-                )
-            )
+    def parse_geoip_data(self, geoip_csv_database_filepath: str) -> None:
+        data_frame = pandas.read_csv(
+            geoip_csv_database_filepath,
+            usecols=['network', 'continent_name', 'country_name'],
+        ).fillna('')
+
+        entries = []
+        for network, continent, country in data_frame.itertuples(index=False, name=None):
+            net = ipaddress.IPv4Network(network)
+            entries.append((int(net.network_address), int(net.broadcast_address), (continent, country)))
+        entries.sort(key=lambda e: e[0])
+
+        self._geoip_starts = [e[0] for e in entries]
+        self._geoip_ends = [e[1] for e in entries]
+        self._geoip_locations = [e[2] for e in entries]
 
     def analyze_ipv4s(self, ipv4s: list[str], no_threads: int) -> None:
         """Analyze the IP addresses (v4) and populate them with information.
@@ -51,14 +65,8 @@ class Analyzer(pydantic.BaseModel):
             no_threads(int): The number of worker threads to run in-parallel.
         """
         verbose.debug('Analyze IPV4s.')
-
         with concurrent.futures.ThreadPoolExecutor(max_workers=no_threads) as executor:
-            futures = [executor.submit(self._populate_ipv4, ip) for ip in ipv4s]
-
-            for future in concurrent.futures.as_completed(futures):
-                ipv4_obj = future.result()
-                verbose.normal(ipv4_obj.ipv4)
-                self.analyzed_ipv4s.append(ipv4_obj)
+            self.analyzed_ipv4s.extend(executor.map(self._populate_ipv4, ipv4s))
 
     def analyze_cidrs(self, cidrs: list[str], no_threads: int) -> None:
         """Analyze the CIDR IP addresses (v4) and populate them with information.
@@ -68,14 +76,8 @@ class Analyzer(pydantic.BaseModel):
             no_threads(int): The number of worker threads to run in-parallel.
         """
         verbose.debug('Analyze CIDRs.')
-
         with concurrent.futures.ThreadPoolExecutor(max_workers=no_threads) as executor:
-            futures = [executor.submit(self._populate_cidr, cidr) for cidr in cidrs]
-
-            for future in concurrent.futures.as_completed(futures):
-                cidr_obj = future.result()
-                verbose.normal(cidr_obj.cidr)
-                self.analyzed_cidrs.append(cidr_obj)
+            self.analyzed_cidrs.extend(executor.map(self._populate_cidr, cidrs))
 
     def analyze_fqdns(self, fqdns: list[str], no_threads: int) -> None:
         """Analyze the FQDNs and populate them with information.
@@ -85,14 +87,8 @@ class Analyzer(pydantic.BaseModel):
             no_threads(int): The number of worker threads to run in-parallel.
         """
         verbose.debug('Analyze FQDNs.')
-
         with concurrent.futures.ThreadPoolExecutor(max_workers=no_threads) as executor:
-            futures = [executor.submit(self._populate_fqdn, fqdn) for fqdn in fqdns]
-
-            for future in concurrent.futures.as_completed(futures):
-                fqdn_obj = future.result()
-                verbose.normal(fqdn_obj.fqdn)
-                self.analyzed_fqdns.append(fqdn_obj)
+            self.analyzed_fqdns.extend(executor.map(self._populate_fqdn, fqdns))
 
     def analyze_urls(self, urls: list[str], no_threads: int) -> None:
         """Analyze the URLS and populate them with information.
@@ -102,262 +98,229 @@ class Analyzer(pydantic.BaseModel):
             no_threads(int): The number of worker threads to run in-parallel.
         """
         verbose.debug('Analyze URLs.')
-
         with concurrent.futures.ThreadPoolExecutor(max_workers=no_threads) as executor:
-            futures = [executor.submit(self._populate_url, url) for url in urls]
+            self.analyzed_urls.extend(executor.map(self._populate_url, urls))
 
-            for future in concurrent.futures.as_completed(futures):
-                url_obj = future.result()
-                verbose.normal(url_obj.url)
-                self.analyzed_urls.append(url_obj)
+    #
+    # Populate
+    #
 
     def _populate_ipv4(self, ipv4: str) -> models.IPV4:
         verbose.debug(f'Analyze {ipv4}.')
 
-        ipv4_obj = models.IPV4()
-        ipv4_obj.ipv4 = ipv4
-
-        ########
-        # Math #
-        ########
         ip = ipaddress.IPv4Address(ipv4)
+        ipv4_obj = models.IPV4(ipv4=ipv4, visibility='Private' if ip.is_private else 'Public')
 
-        ##############
-        # Visibility #
-        ##############
-        ipv4_obj.visibility = 'Private' if ip.is_private else 'Public'
-
-        ########
-        # RDAP #
-        ########
         if ipv4_obj.visibility == 'Public':
-            while True:
-                try:
-                    whois = ipwhois.IPWhois(ipv4_obj.ipv4)
-                    rdap = whois.lookup_rdap(depth=1) or {}
-                    break
-                except Exception:
-                    time.sleep(5)
-                    continue
-
-            network = rdap.get('network') or {}
-            name = network.get('name') or ''  # <- handle None
-            desc = rdap.get('asn_description') or ''  # <- handle None
-
-            ipv4_obj.asn_network = str(name).replace(',', '')
-            ipv4_obj.asn_country_code = rdap.get('asn_country_code') or 'N/A'
-            ipv4_obj.asn_description = str(desc).replace(',', '')
+            self._apply_rdap(ipv4_obj, self._rdap_lookup(ipv4))
+            ipv4_obj.geoip_continent, ipv4_obj.geoip_country = self._geoip_lookup(int(ip), int(ip))
+            ipv4_obj.pingable = self._ping(ipv4)
         else:
-            ipv4_obj.asn_network = 'N/A'
-            ipv4_obj.asn_country_code = 'N/A'
-            ipv4_obj.asn_description = 'N/A'
-
-        #########
-        # GeoIP #
-        #########
-        if ipv4_obj.visibility == 'Public':
-            for r in self.geoip_records:
-                network = ipaddress.IPv4Network(r.network)
-
-                if ip in network:
-                    ipv4_obj.geoip_continent = r.continent_name
-                    ipv4_obj.geoip_country = r.country_name
-        else:
+            self._apply_rdap(ipv4_obj, {})
             ipv4_obj.geoip_continent = 'N/A'
             ipv4_obj.geoip_country = 'N/A'
-
-        ########
-        # Ping #
-        ########
-        if ipv4_obj.visibility == 'Public':
-            param = '-n' if os.sys.platform.lower() == 'win32' else '-c'
-            command = ['ping', param, '1', '-i', '0.2', ipv4]
-            pingable = subprocess.call(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL) == 0
-            ipv4_obj.pingable = pingable
-        else:
             ipv4_obj.pingable = False
 
+        verbose.debug(f'Finished {ipv4}.')
         return ipv4_obj
 
     def _populate_cidr(self, cidr: str) -> models.CIDR:
         verbose.debug(f'Analyze {cidr}.')
 
-        cidr_obj = models.CIDR()
-        cidr_obj.cidr = cidr
-
-        ########
-        # Math #
-        ########
         network = ipaddress.IPv4Network(cidr, strict=False)
-        cidr_obj.number_of_hosts = network.num_addresses - 2
+        cidr_obj = models.CIDR(
+            cidr=cidr,
+            number_of_hosts=self._usable_hosts(network),
+            visibility='Private' if network.is_private else 'Public',
+        )
 
-        ##############
-        # Visibility #
-        ##############
-        cidr_obj.visibility = 'Private' if network.is_private else 'Public'
-
-        ########
-        # RDAP #
-        ########
         if cidr_obj.visibility == 'Public':
-            ip = cidr.split('/')[0]
-            while True:
-                try:
-                    whois = ipwhois.IPWhois(ip)
-                    rdap = whois.lookup_rdap(depth=1) or {}
-                    break
-                except Exception:
-                    time.sleep(5)
-                    continue
-            network = rdap.get('network') or {}
-            name = network.get('name') or ''
-            desc = rdap.get('asn_description') or ''
-
-            cidr_obj.asn_network = str(name).replace(',', '')
-            cidr_obj.asn_country_code = rdap.get('asn_country_code') or 'N/A'
-            cidr_obj.asn_description = str(desc).replace(',', '')
+            self._apply_rdap(cidr_obj, self._rdap_lookup(str(network.network_address)))
+            cidr_obj.geoip_continent, cidr_obj.geoip_country = self._geoip_lookup(
+                int(network.network_address), int(network.broadcast_address)
+            )
         else:
-            cidr_obj.asn_network = 'N/A'
-            cidr_obj.asn_country_code = 'N/A'
-            cidr_obj.asn_description = 'N/A'
-
-        #########
-        # GeoIP #
-        #########
-        if cidr_obj.visibility == 'Public':
-            for r in self.geoip_records:
-                if cidr_obj.asn_network == r.network:
-                    cidr_obj.geoip_continent = r.continent_name
-                    cidr_obj.geoip_country = r.country_name
-        else:
+            self._apply_rdap(cidr_obj, {})
             cidr_obj.geoip_continent = 'N/A'
             cidr_obj.geoip_country = 'N/A'
 
+        verbose.debug(f'Finished {cidr}.')
         return cidr_obj
 
     def _populate_fqdn(self, fqdn: str) -> models.FQDN:
         verbose.debug(f'Analyze {fqdn}.')
 
         ######################################################################################
-        # Process                                                                            #
-        # ---                                                                                #
         # Notes:                                                                             #
         # - We need to use different DNS every time otherwise we trigger a DOS response.     #
         # - A FQDN can point only to a *single* CNAME (RFC 1034 & RFC 2181).                 #
         # - A FQDN can point to multiple IP addresses (Load-Balancing).                      #
         # - A FQDN cannot have a CNAME and A/AAA records at the same time.                   #
-        # Code:                                                                              #
-        # - Keep a list of FQDNs to resolve.                                                 #
-        # - Ask DNS server for CNAME records of FQDN.                                        #
-        # - If there is a CNAME record, append it in the list of FQDNs to resolve.           #
-        #    - else check for A records for the hostname.                                    #
         ######################################################################################
-        f = models.FQDN(fqdn=fqdn, dns_chain=[fqdn], destination_ips=[])
+        f = models.FQDN(fqdn=fqdn, dns_chain=[fqdn])
 
-        #############################
-        # Discover the CNAME Chain. #
-        #############################
+        # Follow the CNAME chain.
         while True:
-            cname_record = ''
-            try:
-                answer = dns.resolver.resolve_at(random.choice(DNS_SERVERS), f.dns_chain[-1], 'CNAME')
-
-                time.sleep(0.2)
-
-                for rdap in answer:
-                    cname_record = str(rdap.target).rstrip('.')  # Remove the trailing dot.
-
-            except dns.resolver.NXDOMAIN:
-                verbose.debug(f'{f.dns_chain[-1]}: NXDOMAIN - domain does not exist')
+            answer = self._resolve(f.dns_chain[-1], 'CNAME')
+            if answer is None:
                 break
 
-            except dns.resolver.NoAnswer:
-                verbose.debug(f'{f.dns_chain[-1]}: NoAnswer - no CNAME record found, move to A record lookup')
+            cname = str(answer[0].target).rstrip('.')  # Remove the trailing dot.
+            if cname in f.dns_chain or len(f.dns_chain) >= MAX_CNAME_CHAIN:
+                verbose.debug(f'{f.dns_chain[-1]}: CNAME loop or chain too long - stop following it')
                 break
 
-            except dns.resolver.NoNameservers:
-                verbose.debug(f'{f.dns_chain[-1]}: NoNameservers - authoritative servers are unreachable')
-                break
+            f.dns_chain.append(cname)
 
-            except dns.resolver.LifetimeTimeout:
-                verbose.debug(f'{f.dns_chain[-1]}: LifetimeTimeout - wait a couple of seconds and repeat')
-                time.sleep(2)
-                continue
+        # For the last link in the DNS chain, check its A records.
+        answer = self._resolve(f.dns_chain[-1], 'A')
+        if answer is not None:
+            f.hosts_found = True
+            for record in answer:
+                f.destination_ips.append(self._populate_ipv4(str(record.address)))
 
-            f.dns_chain.append(cname_record)
-
-        ############################################################
-        # For the last link in the DNS chain, check its A records. #
-        ############################################################
-        while True:
-            try:
-                answer = dns.resolver.resolve_at(
-                    random.choice(DNS_SERVERS),
-                    f.dns_chain[-1],
-                    'A',
-                    lifetime=10,
-                )
-
-                time.sleep(0.2)
-
-                resolved_ips = []
-                for rdap in answer:
-                    resolved_ips.append(str(rdap.address))
-
-                f.hosts_found = True
-
-                for ip in resolved_ips:
-                    ip_obj = self._populate_ipv4(ip)
-                    f.destination_ips.append(ip_obj)
-
-                break
-
-            except dns.resolver.NXDOMAIN:
-                verbose.debug(f'{f.dns_chain[-1]}: NXDOMAIN - domain does not exist')
-                break
-
-            except dns.resolver.NoAnswer:
-                verbose.debug(f'{f.dns_chain[-1]}: NoAnswer - no A record found')
-                break
-
-            except dns.resolver.NoNameservers:
-                verbose.debug(f'{f.dns_chain[-1]}: NoNameservers - authoritative servers are unreachable')
-                break
-
-            except dns.resolver.LifetimeTimeout:
-                verbose.debug(f'{f.dns_chain[-1]}: LifetimeTimeout - wait a couple of seconds and repeat')
-                time.sleep(2)
-                continue
-
+        verbose.debug(f'Finished {fqdn}.')
         return f
 
     def _populate_url(self, url: str) -> models.URL:
         verbose.debug(f'Analyze {url}.')
 
         parsed_url = urllib.parse.urlparse(url)
-        parsed_port = parsed_url.port if parsed_url.port is not None else 443 if parsed_url.scheme == 'https' else 80
+        host = parsed_url.hostname
+        port = parsed_url.port or DEFAULT_PORTS.get(parsed_url.scheme, 80)
 
         u = models.URL(
             url=url,
             scheme=parsed_url.scheme,
-            username=parsed_url.username if parsed_url.username is not None else '',
-            password=parsed_url.password if parsed_url.password is not None else '',
-            port=parsed_port,
+            username=parsed_url.username or '',
+            password=parsed_url.password or '',
+            port=port,
             path=parsed_url.path,
         )
 
-        u.fqdn = self._populate_fqdn(parsed_url.hostname)
+        if self._is_ipv4(host):
+            # An IP literal has no DNS chain; analyze the IP directly.
+            u.fqdn = models.FQDN(
+                fqdn=host, dns_chain=[host], hosts_found=True, destination_ips=[self._populate_ipv4(host)]
+            )
+        else:
+            u.fqdn = self._populate_fqdn(host)
 
-        ########
-        # CURL #
-        ########
-        try:
-            requests.get(u.url, verify=False, timeout=2)
-            u.reachable = True
-        except requests.exceptions.RequestException:
-            u.reachable = False
+        u.reachable = self._is_reachable(u, host)
 
+        verbose.debug(f'Finished {url}.')
         return u
+
+    #
+    # Helpers
+    #
+
+    @staticmethod
+    def _usable_hosts(network: ipaddress.IPv4Network) -> int:
+        if network.prefixlen == 32:
+            return 1
+        if network.prefixlen == 31:
+            return 2  # Point-to-point link (RFC 3021).
+        return network.num_addresses - 2
+
+    @staticmethod
+    def _is_ipv4(value: str) -> bool:
+        try:
+            ipaddress.IPv4Address(value)
+            return True
+        except ValueError:
+            return False
+
+    @staticmethod
+    def _rdap_lookup(ip: str) -> dict:
+        """Query RDAP for `ip`, retrying a few times on transient errors. Returns `{}` on failure."""
+        for attempt in range(1, RDAP_MAX_ATTEMPTS + 1):
+            try:
+                return ipwhois.IPWhois(ip).lookup_rdap(depth=1) or {}
+            except ipwhois.exceptions.IPDefinedError as e:
+                # Reserved/special-purpose addresses (e.g. multicast) have no RDAP data.
+                verbose.debug(f'{ip}: RDAP - {e}')
+                return {}
+            except Exception as e:
+                verbose.debug(f'{ip}: RDAP attempt {attempt}/{RDAP_MAX_ATTEMPTS} failed - {e}')
+                if attempt < RDAP_MAX_ATTEMPTS:
+                    time.sleep(RDAP_RETRY_DELAY)
+        return {}
+
+    @staticmethod
+    def _apply_rdap(obj: models.IPV4 | models.CIDR, rdap: dict) -> None:
+        network = rdap.get('network') or {}
+        obj.asn_network = str(network.get('name') or 'N/A').replace(',', '')
+        obj.asn_country_code = rdap.get('asn_country_code') or 'N/A'
+        obj.asn_description = str(rdap.get('asn_description') or 'N/A').replace(',', '')
+
+    def _geoip_lookup(self, first: int, last: int) -> tuple[str, str]:
+        """Return (continent, country) for the address range `first`..`last`.
+
+        Returns 'Multiple' if the range spans more than one GeoIP network and 'N/A' if it is unknown.
+        """
+        i = bisect.bisect_right(self._geoip_starts, first) - 1
+        if i < 0 or self._geoip_ends[i] < first:
+            return 'N/A', 'N/A'
+        if self._geoip_ends[i] < last:
+            return 'Multiple', 'Multiple'
+        continent, country = self._geoip_locations[i]
+        return continent or 'N/A', country or 'N/A'
+
+    @staticmethod
+    def _ping(ip: str) -> bool:
+        if sys.platform == 'win32':
+            command = ['ping', '-n', '1', '-w', '2000', ip]  # -w: timeout in ms
+        elif sys.platform == 'darwin':
+            command = ['ping', '-c', '1', '-W', '2000', ip]  # -W: timeout in ms
+        else:
+            command = ['ping', '-c', '1', '-W', '2', ip]  # -W: timeout in s
+        try:
+            return subprocess.call(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=10) == 0
+        except (OSError, subprocess.TimeoutExpired):
+            return False
+
+    @staticmethod
+    def _resolve(name: str, rdtype: str) -> dns.resolver.Answer | None:
+        """Resolve `name` using a random public DNS server. Returns `None` if there is no answer."""
+        timeouts = 0
+        while True:
+            try:
+                answer = dns.resolver.resolve_at(random.choice(DNS_SERVERS), name, rdtype, lifetime=10)
+                time.sleep(DNS_QUERY_DELAY)
+                return answer
+            except dns.resolver.NXDOMAIN:
+                verbose.debug(f'{name}: NXDOMAIN - domain does not exist')
+            except dns.resolver.NoAnswer:
+                verbose.debug(f'{name}: NoAnswer - no {rdtype} record found')
+            except dns.resolver.NoNameservers:
+                verbose.debug(f'{name}: NoNameservers - authoritative servers are unreachable')
+            except dns.exception.Timeout:
+                timeouts += 1
+                if timeouts < DNS_MAX_TIMEOUTS:
+                    verbose.debug(
+                        f'{name}: Timeout ({timeouts}/{DNS_MAX_TIMEOUTS}) - wait a couple of seconds and repeat'
+                    )
+                    time.sleep(2)
+                    continue
+                verbose.debug(f'{name}: Timeout - giving up')
+            except dns.exception.DNSException as e:
+                verbose.debug(f'{name}: {type(e).__name__} - {e}')
+            return None
+
+    @staticmethod
+    def _is_reachable(u: models.URL, host: str) -> bool:
+        if u.scheme in ('http', 'https'):
+            try:
+                requests.get(u.url, verify=False, timeout=2)
+                return True
+            except requests.exceptions.RequestException:
+                return False
+        try:
+            socket.create_connection((host, u.port), timeout=2).close()
+            return True
+        except OSError:
+            return False
 
 
 DNS_SERVERS = [

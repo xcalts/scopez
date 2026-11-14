@@ -4,6 +4,7 @@ import rich.panel
 
 import ipaddress
 import sys
+import typing
 import urllib.parse
 
 import verbose
@@ -31,127 +32,79 @@ class Targeter(pydantic.BaseModel):
             targets_filepath (str): Path to file or "-" to read from stdin.
 
         """
-        file = sys.stdin if targets_filepath == '-' else open(targets_filepath, 'r', encoding='utf-8')
-
-        with file as f:
-            for line in f:
-                val = line.strip()
-                if self._validate_ipv4(val):
-                    self.ipv4s.append(val)
-                elif self._validate_ipv4_with_port(val):
-                    self.ipv4s_with_port.append(val)
-                elif self._validate_ipv6(val):
-                    self.ipv6s.append(val)
-                elif self._validate_ipv6_with_port(val):
-                    self.ipv6s_with_port.append(val)
-                elif self._validate_fqdn(val):
-                    self.fqdns.append(val)
-                elif self._validate_fqdn_with_port(val):
-                    self.fqdns_with_port.append(val)
-                elif self._validate_cidr_ipv4(val):
-                    self.cidrs_v4.append(val)
-                elif self._validate_url(val):
-                    self.urls.append(val)
-                else:
-                    self.invalids.append(val)
-
-        self._remove_duplicates()
-        self._sort_ascending()
+        if targets_filepath == '-':
+            self._add_targets(sys.stdin)
+        else:
+            with open(targets_filepath, 'r', encoding='utf-8') as f:
+                self._add_targets(f)
 
     def parse_targets_str(self, targets_str: str) -> None:
         """
         Parses the targets from a string.
 
         Args:
-            targets_str (str): The text that contains the targets separted by a newline.
+            targets_str (str): The text that contains the targets separated by a comma.
 
         """
-        for val in targets_str.split(','):
-            if self._validate_ipv4(val):
-                self.ipv4s.append(val)
-            elif self._validate_ipv4_with_port(val):
-                self.ipv4s_with_port.append(val)
-            elif self._validate_ipv6(val):
-                self.ipv6s.append(val)
-            elif self._validate_ipv6_with_port(val):
-                self.ipv6s_with_port.append(val)
-            elif self._validate_fqdn(val):
-                self.fqdns.append(val)
-            elif self._validate_fqdn_with_port(val):
-                self.fqdns_with_port.append(val)
-            elif self._validate_cidr_ipv4(val):
-                self.cidrs_v4.append(val)
-            elif self._validate_url(val):
-                self.urls.append(val)
-            else:
-                self.invalids.append(val)
+        self._add_targets(targets_str.split(','))
+
+    def parse_exclusions_file(self, exclusions_filepath: str) -> None:
+        """Parses targets in the exclusions file and removes them from the targets list."""
+        with open(exclusions_filepath, 'r', encoding='utf-8') as f:
+            self._remove_targets(f)
+
+    def parse_exclusions_str(self, exclusion_str: str) -> None:
+        """Parses comma-separated exclusions and removes them from the targets list."""
+        self._remove_targets(exclusion_str.split(','))
+
+    def _classify(self, value: str) -> str:
+        """Return the name of the list that `value` belongs to."""
+        if self._validate_ipv4(value):
+            return 'ipv4s'
+        if self._validate_ipv4_with_port(value):
+            return 'ipv4s_with_port'
+        if self._validate_ipv6(value):
+            return 'ipv6s'
+        if self._validate_ipv6_with_port(value):
+            return 'ipv6s_with_port'
+        if self._validate_fqdn(value):
+            return 'fqdns'
+        if self._validate_fqdn_with_port(value):
+            return 'fqdns_with_port'
+        if self._validate_cidr_ipv4(value):
+            return 'cidrs_v4'
+        if self._validate_cidr_ipv6(value):
+            return 'cidrs_v6'
+        if self._validate_url(value):
+            return 'urls'
+        return 'invalids'
+
+    def _add_targets(self, values: typing.Iterable[str]) -> None:
+        for raw in values:
+            value = raw.strip()
+            if value:
+                getattr(self, self._classify(value)).append(value)
 
         self._remove_duplicates()
         self._sort_ascending()
 
-    def parse_exclusions_file(self, exclusions_filepath: str) -> None:
-        """Parses targets in the exclusions file and removes them from the targets list."""
-        # Extracting the exclusions and removing them from the target lists
-        with open(exclusions_filepath, 'r', encoding='utf-8') as file:
-            for val in file:
-                val = val.strip()
-                if self._validate_ipv4(val):
-                    self._remove_from_list(self.ipv4s, val)
-                elif self._validate_ipv4_with_port(val):
-                    self._remove_from_list(self.ipv4s_with_port, val)
-                elif self._validate_ipv6(val):
-                    self._remove_from_list(self.ipv6s, val)
-                elif self._validate_ipv6_with_port(val):
-                    self._remove_from_list(self.ipv6s_with_port, val)
-                elif self._validate_fqdn(val):
-                    self._remove_from_list(self.fqdns, val)
-                elif self._validate_fqdn_with_port(val):
-                    self._remove_from_list(self.fqdns_with_port, val)
-                elif self._validate_cidr_ipv4(val):
-                    self._remove_from_list(self.cidrs_v4, val)
-                elif self._validate_url(val):
-                    self._remove_from_list(self.urls, val)
-                else:
-                    self._remove_from_list(self.invalids, val)
-
-    def parse_exclusions_str(self, exclusion_str: str) -> None:
-        for val in exclusion_str.split(','):
-            val = val.strip()
-            if self._validate_ipv4(val):
-                self._remove_from_list(self.ipv4s, val)
-            elif self._validate_ipv4_with_port(val):
-                self._remove_from_list(self.ipv4s_with_port, val)
-            elif self._validate_ipv6(val):
-                self._remove_from_list(self.ipv6s, val)
-            elif self._validate_ipv6_with_port(val):
-                self._remove_from_list(self.ipv6s_with_port, val)
-            elif self._validate_fqdn(val):
-                self._remove_from_list(self.fqdns, val)
-            elif self._validate_fqdn_with_port(val):
-                self._remove_from_list(self.fqdns_with_port, val)
-            elif self._validate_cidr_ipv4(val):
-                self._remove_from_list(self.cidrs_v4, val)
-            elif self._validate_url(val):
-                self._remove_from_list(self.urls, val)
-            else:
-                self._remove_from_list(self.invalids, val)
+    def _remove_targets(self, values: typing.Iterable[str]) -> None:
+        for raw in values:
+            value = raw.strip()
+            if value:
+                self._remove_from_list(getattr(self, self._classify(value)), value)
 
     def total_count(self) -> int:
-        return (
-            len(self.ipv4s)
-            + len(self.ipv4s_with_port)
-            + len(self.ipv6s)
-            + len(self.ipv6s_with_port)
-            + len(self.fqdns)
-            + len(self.fqdns_with_port)
-            + len(self.cidrs_v4)
-            + len(self.cidrs_v6)
-            + len(self.urls)
-        )
+        """Number of targets that can be analyzed."""
+        return len(self.ipv4s) + len(self.fqdns) + len(self.cidrs_v4) + len(self.urls)
+
+    def unsupported(self) -> list[str]:
+        """Valid targets that are parsed but not analyzed yet (IPv6, CIDRv6 and targets with a port)."""
+        return self.ipv4s_with_port + self.ipv6s + self.ipv6s_with_port + self.fqdns_with_port + self.cidrs_v6
 
     def print_targets(self) -> None:
         """Prints the parsed targets in a beautifull format."""
-        console = verbose.CONSOLE
+        console = verbose.OUT
 
         if len(self.ipv4s) > 0:
             console.print(rich.panel.Panel.fit('IP Addresses (v4)'))
@@ -217,18 +170,20 @@ class Targeter(pydantic.BaseModel):
         self.fqdns = list(set(self.fqdns))
         self.fqdns_with_port = list(set(self.fqdns_with_port))
         self.cidrs_v4 = list(set(self.cidrs_v4))
+        self.cidrs_v6 = list(set(self.cidrs_v6))
         self.urls = list(set(self.urls))
         self.invalids = list(set(self.invalids))
 
     def _sort_ascending(self) -> None:
         """Sort the targets in ascending order."""
-        self.ipv4s.sort()
+        self.ipv4s.sort(key=ipaddress.IPv4Address)
         self.ipv4s_with_port.sort()
-        self.ipv6s.sort()
+        self.ipv6s.sort(key=ipaddress.IPv6Address)
         self.ipv6s_with_port.sort()
         self.fqdns.sort()
         self.fqdns_with_port.sort()
-        self.cidrs_v4.sort()
+        self.cidrs_v4.sort(key=ipaddress.IPv4Network)
+        self.cidrs_v6.sort(key=ipaddress.IPv6Network)
         self.urls.sort()
         self.invalids.sort()
 
@@ -286,7 +241,10 @@ class Targeter(pydantic.BaseModel):
             return False
 
     def _validate_fqdn(self, value: str) -> bool:
-        return fqdn.FQDN(value).is_valid
+        try:
+            return fqdn.FQDN(value).is_valid
+        except ValueError:
+            return False
 
     def _validate_fqdn_with_port(self, value: str) -> bool:
         if ':' not in value:
@@ -297,8 +255,15 @@ class Targeter(pydantic.BaseModel):
         if not host or not self._validate_fqdn(host):
             return False
 
-        return 1 <= int(port) <= 65535
+        try:
+            return 1 <= int(port) <= 65535
+        except ValueError:
+            return False
 
     def _validate_url(self, value: str) -> bool:
-        parsed = urllib.parse.urlparse(value)
-        return parsed.scheme in ('http', 'https', 'ftp') and bool(parsed.netloc)
+        try:
+            parsed = urllib.parse.urlparse(value)
+            parsed.port  # Raises `ValueError` if the port is out of range or not a number.
+        except ValueError:
+            return False
+        return parsed.scheme in ('http', 'https', 'ftp') and bool(parsed.hostname)

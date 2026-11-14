@@ -3,7 +3,7 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import numpy as np
 
-import PIL
+import PIL.Image
 import pathlib
 import os.path
 
@@ -63,7 +63,7 @@ class Visualizer(pydantic.BaseModel):
 
             if f.hosts_found:
                 for ip in f.destination_ips:
-                    _ipnode = f'{f.fqdn}_{ip}'
+                    _ipnode = f'{f.fqdn}_{ip.ipv4}'
                     G.add_node(_ipnode, image=icons['ipv4'], name=ip.ipv4)
                     G.add_edge(f.dns_chain[-1], _ipnode)
             else:
@@ -87,7 +87,7 @@ class Visualizer(pydantic.BaseModel):
 
             if u.fqdn.hosts_found:
                 for ip in u.fqdn.destination_ips:
-                    _ipnode = f'{u.fqdn.fqdn}_{ip}'
+                    _ipnode = f'{u.fqdn.fqdn}_{ip.ipv4}'
                     G.add_node(_ipnode, image=icons['ipv4'], name=ip.ipv4)
                     G.add_edge(u.fqdn.dns_chain[-1], _ipnode)
             else:
