@@ -15,7 +15,7 @@
   <h1>Scopez</h1>
   
   <p align="center">
-    Scopez verifies connectivity to target servers, reveals CDN presence, and provides detailed target insights like reachability and RDAP.
+    Scopez is a bug-bounty tool that verifies connectivity to target servers, reveals CDN presence, and provides detailed target insights like reachability and RDAP.
     <br />
     <br />
     <a href="https://github.com/xcalts/scopez/issues/new?labels=bug&template=bug-report---.md">Report Bug</a>
@@ -26,6 +26,10 @@
   </p>
 
 </div>
+
+<p align="center">
+  <img src=".github/demo.gif" alt="scopez demo" />
+</p>
 
 ## Installation
 
